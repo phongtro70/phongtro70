@@ -1,3 +1,7 @@
+# Phiên bản 2026-11-30-c
+- **Kho ảnh Vercel Blob nhận cách kết nối mới (OIDC)**: Vercel nay nối kho Blob bằng biến `BLOB_STORE_ID` (không còn tự tạo `BLOB_READ_WRITE_TOKEN`). App nhận cả hai kiểu, nên chỉ cần nối kho `cccd70` vào dự án rồi Redeploy (bỏ tích "Use existing Build Cache"). `BLOB_READ_WRITE_TOKEN` vẫn cần nếu chạy trên Render.
+- README và hướng dẫn kết nối không còn ghi mật khẩu thật; file kiểm thử dùng mật khẩu giả.
+
 # Phiên bản 2026-11-30-b
 - **Nhắc Nợ**: hai ô lớn **Cần Thu** (xanh) / **Cần Trả** (đỏ) hiện "Cần Thu (n khoản)" và số tiền; bấm ô nào chỉ hiện danh sách và thống kê của loại đó. Khoản đã trả xong không hiện ở danh sách nữa. Ô Ghi chú là khung nhiều dòng.
 - Nút **Bản Khai CT01 - Lưu Trú** màu cam. Trang phòng có thêm nút **Sửa thông tin người đăng ký** và **Sửa** cho từng người ở cùng.
