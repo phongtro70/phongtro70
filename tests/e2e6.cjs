@@ -6,7 +6,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   await pg.route(/\/api\/(?!index)[^?]*$/, (r) => r.fulfill({ status: 404, contentType: 'text/plain', body: 'The page could not be found' }));
   await pg.goto('http://localhost:4173/'); await pg.waitForSelector('text=TỔNG QUAN CẦN XỬ LÝ'); ok(true, 'đường dẫn trực tiếp bị 404 → web tự chuyển sang /api/index?path= và hiển thị bình thường');
   ok((await pg.innerText('body')).includes('Phiên bản giao diện: 2026-11-30-b'), 'trang ngoài hiện số phiên bản giao diện');
-  await pg.goto('http://localhost:4173/#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card'); ok(true, 'đăng nhập + tải dữ liệu qua đường dẫn dự phòng');
+  await pg.goto('http://localhost:4173/#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card'); ok(true, 'đăng nhập + tải dữ liệu qua đường dẫn dự phòng');
   await pg.locator('.room-card').first().click(); await pg.waitForSelector('text=Hóa đơn theo tháng'); ok(true, 'các màn hình quản lý hoạt động qua đường dẫn dự phòng');
   await pg.unroute(/\/api\/(?!index)[^?]*$/);
   // Cả hai đường dẫn đều 404: phải hiện bản tự chẩn đoán

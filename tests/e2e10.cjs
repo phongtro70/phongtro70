@@ -15,7 +15,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   await pg.evaluate(() => { window.__marker = 1; }); await pg.selectOption('#pubcal select[data-change=cal-month]', '2'); await pg.selectOption('#pubcal select[data-change=cal-year]', String(new Date().getFullYear() + 1)); ok((await pg.evaluate(() => window.__marker)) === 1 && /Tháng 2/.test(await pg.$eval('#pubcal .cal-sel', (e) => e.selectedOptions[0].text)), 'chọn tháng/năm từ danh sách: lịch đổi ngay, KHÔNG tải lại trang');
   await pg.click('#pubcal [data-act=cal-today]');
   // đăng nhập, thêm sự kiện
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card'); await pg.goto(H + '#/dashboard'); await pg.waitForSelector('.cal');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card'); await pg.goto(H + '#/dashboard'); await pg.waitForSelector('.cal');
   await pg.click('.cal button[data-act=ev-add] >> nth=0'); ok(await pg.isChecked('input[name=repeat][value="1"]'), 'mặc định "lặp lại hằng năm"');
   await pg.click('#modal button.x'); ok((await pg.locator('#modal .dialog').count()) === 0, 'nút ✕ đóng được hộp thoại'); await pg.click('.cal button[data-act=ev-add] >> nth=0');
   await pg.fill('[name=name]', 'Họp tổ dân phố'); ok(await pg.isChecked('input[name=calendar][value=lunar]'), 'sự kiện mới mặc định theo LỊCH ÂM'); await pg.check('input[name=calendar][value=solar]'); await pg.fill('[name=sdate]', VN(2)); await pg.fill('[name=note]', 'BÍ MẬT-GHI-CHÚ'); await pg.check('input[name=color][value="#ff3b30"]', { force: true }); await pg.waitForSelector('#ev-prev:has-text("Âm lịch tương ứng")'); ok(true, 'xem trước ngày âm khi chọn ngày dương');
@@ -43,7 +43,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   for (const [w, h, name] of sizes) {
     const c = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 }); const q = await c.newPage(); await q.goto(H); await q.waitForSelector('#pubcal .cal-days'); const ov = async (label) => { const x = await q.evaluate(() => document.documentElement.scrollWidth - window.innerWidth); if (x > 1) bad.push(`${name}/${label} tràn ${x}px`); };
     await ov('trang-ngoai'); await q.screenshot({ path: `/tmp/shots/90-${name}-public.png`, fullPage: true });
-    await q.goto(H + '#/login'); await q.fill('input[name=password]', '29081989@'); await q.click('button:has-text("ĐĂNG NHẬP")'); await q.waitForSelector('.room-card');
+    await q.goto(H + '#/login'); await q.fill('input[name=password]', 'MatKhauKiemThu-123'); await q.click('button:has-text("ĐĂNG NHẬP")'); await q.waitForSelector('.room-card');
     for (const r of ['dashboard', 'calendar', 'tenants', 'reports', 'backup', 'room/room-1']) { await q.goto(H + '#/' + r); await q.waitForTimeout(500); await ov(r); if (r === 'calendar') await q.screenshot({ path: `/tmp/shots/91-${name}-calendar.png`, fullPage: true }); }
     await c.close();
   }

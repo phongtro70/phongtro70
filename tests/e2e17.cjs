@@ -6,7 +6,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; }; const H = 'http://localhost:4173/';
   const call = async (m, p, body) => { const c = await pg.evaluate(() => fetch('/api/auth/session').then((r) => r.json()).then((j) => j.csrf)); return pg.evaluate(([m, p, body, c]) => fetch('/api/' + p, { method: m, headers: { 'content-type': 'application/json', 'x-csrf-token': c }, body: body ? JSON.stringify(body) : undefined }).then((r) => r.json()), [m, p, body, c]); };
   const get = () => pg.evaluate(() => fetch('/api/data').then((r) => r.json()));
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   // ---- quy tắc nợ: Phòng 2 mới vào ở, chưa ghi điện nước => chưa tính là nợ ----
   const st = await pg.innerText('.cards7'); ok(/Phòng cần thu tiền/.test(st) && /0\s*\n?\s*Phòng cần thu tiền|^0/m.test(st.replace(/\n+/g, '\n')) && /Tổng công nợ/.test(st), 'Tổng quan hiện đủ các ô');
   const nums = await pg.evaluate(() => [...document.querySelectorAll('.cards7 .stat')].map((s) => s.innerText.replace(/\n/g, ' | '))); ok(nums.some((x) => /^0 \| Phòng cần thu tiền/.test(x)) && nums.some((x) => /^0 đ \| Tổng công nợ/.test(x)) && !nums.some((x) => /Tổng tiền cần thu/.test(x)), 'chưa ghi điện nước: Phòng cần thu = 0, đã bỏ ô Tổng tiền cần thu, Tổng công nợ = 0 đ (chưa tính là nợ)');

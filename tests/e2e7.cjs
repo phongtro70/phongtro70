@@ -5,7 +5,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 }); const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('dialog', (d) => d.accept());
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; };
   const H = 'http://localhost:4173/'; const api = (p, o) => pg.evaluate(([u, o]) => fetch(u, o).then((r) => r.json()), ['/api/' + p, o]);
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   const px = (sel) => pg.$eval(sel, (e) => parseFloat(getComputedStyle(e).fontSize)); const root = await pg.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
   ok((await px('.top h1')) === 2 * root && (await px('.top .credit')) === 0.5 * root, 'tiêu đề 2rem, chữ BusCafe 0,5rem');
   ok((await px('#footstrip .foot-strip')) === 1 * root && (await px('.top .bell')) === 1 * root && (await px('.top .dt')) === 1.2 * root, 'dòng lưu trữ (cuối trang) và chuông 1rem; ngày + âm lịch 1,2rem');

@@ -12,7 +12,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   ok(t.includes('Phòng 1: điện tăng 60%') || /Phòng 1 – nghi rò rỉ điện/.test(t), 'điện tăng > 20% → cảnh báo kiểm tra rò rỉ'); ok(!/Phòng 1 – nghi rò rỉ nước/.test(t), 'nước giảm → không cảnh báo');
   ok(/Chủ Nhà[\s\S]*chốt ngày/.test(t) && /nghi rò rỉ điện/.test(t.split('Chủ Nhà')[0] + t), 'Chủ Nhà (tổng − phòng) hiển thị và cảnh báo khi tăng > 20%');
   await pg.screenshot({ path: '/tmp/shots/70-usage-public.png', fullPage: true });
-  await pg.goto('http://localhost:4173/#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto('http://localhost:4173/#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   ok((await pg.locator('.room-card:not(.owner-card)').count()) === 7 && (await pg.locator('.owner-card').count()) === 1, '7 phòng + 1 thẻ "Chủ Nhà" riêng (không tính vào số phòng)');
   ok((await pg.innerText('.top .bell')).trim() !== '0', 'chuông thông báo đếm cả cảnh báo rò rỉ');
   await pg.locator('.owner-card').click(); await pg.waitForSelector('text=Chủ Nhà – đồng hồ tổng');

@@ -3,7 +3,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true }); const page = await ctx.newPage(); const errs = []; page.on('pageerror', (e) => errs.push(e.message)); page.on('dialog', (d) => d.accept());
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; };
-  await page.goto('http://localhost:4173/#/login'); await page.fill('input[name=password]', '29081989@'); await page.click('button:has-text("ĐĂNG NHẬP")'); await page.waitForSelector('text=Các phòng');
+  await page.goto('http://localhost:4173/#/login'); await page.fill('input[name=password]', 'MatKhauKiemThu-123'); await page.click('button:has-text("ĐĂNG NHẬP")'); await page.waitForSelector('text=Các phòng');
   ok(await page.isVisible('.top .ubar.bad >> text=sắp đầy'), 'thanh mức dùng ở đầu trang chuyển đỏ + "sắp đầy" khi ≥ 90%');
   await page.screenshot({ path: '/tmp/shots/10-warn.png' });
   await page.click('#footstrip a:has-text("Dọn dữ liệu")'); await page.waitForSelector('text=Dung lượng & dọn dữ liệu cũ'); ok(await page.isVisible('text=Khách Cũ Ba Năm'), 'liệt kê khách đủ điều kiện (trả phòng 2023)');

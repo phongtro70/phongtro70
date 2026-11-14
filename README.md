@@ -1,6 +1,6 @@
 # PHÒNG TRỌ 70 HOÀNG SÂM – Hệ thống quản lý nhà trọ
 
-> **Bản độc lập cho nhà 70.** Đọc `HUONG-DAN-KET-NOI-PHONG-TRO-70.md` để kết nối từ đầu (GitHub, Vercel `phongtro70.vercel.app`, Upstash, Blob, Google Sheet). Mật khẩu: biến `APP_PASSWORD` = `29081989@`.
+> **Bản độc lập cho nhà 70.** Đọc `HUONG-DAN-KET-NOI-PHONG-TRO-70.md` để kết nối từ đầu (GitHub, Vercel `phongtro70.vercel.app`, Upstash, Blob, Google Sheet). Mật khẩu đăng nhập đặt bằng biến `APP_PASSWORD` trên Vercel (không ghi trong mã nguồn).
 
 Website dùng thật cho **một chủ nhà**, ban đầu 7 phòng, mở rộng được. Chạy hoàn toàn trên gói miễn phí GitHub + Vercel.
 
@@ -38,7 +38,7 @@ docs/                   Hướng dẫn triển khai, giới hạn
 - Ngày đến hạn tính từ ngày vào ở; tháng thiếu ngày thì lấy ngày cuối tháng (31/01 → 28/02 → 31/03).
 - Nợ chỉ nằm ở hóa đơn mới nhất của khách; hóa đơn cũ có nợ được đánh dấu "đã chuyển nợ" → không bao giờ tính hai lần.
 - Trả phòng: giá ngày = giá tháng ÷ 30; quyết toán = nợ còn lại − tiền phòng chưa dùng + tiền phòng thực tế (nếu kỳ chưa lập) + điện + nước + phát sinh. Kỳ chưa thanh toán không bị trừ "tiền trả trước".
-- Không có tiền cọc, không có tài khoản khách.
+- Có **Số Tiền Đặt Cọc** (mặc định 0): khi trả phòng, cọc được trừ vào hóa đơn quyết toán, phần dư hoàn lại khách. Không có tài khoản khách.
 
 ## Kiểm thử
 `npm test` (logic tính tiền + dọn dữ liệu, 30 ca) · `node tests/integration-redis.js` (API + Upstash giả lập, 11 ca) · `tests/integration-blob.js`, `tests/integration.js` (nơi lưu phụ) · `tests/e2e.cjs` (trình duyệt thật, cần Playwright; chạy cùng `node tests/e2e-server.js`).

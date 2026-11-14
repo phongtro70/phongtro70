@@ -9,9 +9,9 @@ Thông tin đã cài sẵn trong mã nguồn:
 | Chữ nhỏ cạnh tên | **BusCafe** |
 | Icon | Ngôi nhà số **70**, nền cam – hồng – tím (khác icon nhà 44) |
 | Tên miền | **https://phongtro70.vercel.app** (xem Bước 3) |
-| Mật khẩu đăng nhập | **29081989@** (khai báo ở Bước 3, biến `APP_PASSWORD`) |
+| Mật khẩu đăng nhập | Do bạn tự đặt, khai báo ở Bước 3 (biến `APP_PASSWORD`). **Không ghi mật khẩu vào file này.** |
 
-> Vì sao mật khẩu phải khai báo trên Vercel mà không viết cứng trong mã? Mã nguồn nằm trên GitHub; nếu mật khẩu nằm trong mã thì ai xem được kho mã sẽ biết mật khẩu. Nên mật khẩu "mặc định" của bạn được đặt bằng biến `APP_PASSWORD` = `29081989@` – đăng nhập xong là dùng được ngay. Muốn đổi sau này chỉ cần sửa biến đó (xem cuối file).
+> Vì sao mật khẩu phải khai báo trên Vercel mà không viết cứng trong mã? Mã nguồn nằm trên GitHub; nếu mật khẩu nằm trong mã thì ai xem được kho mã sẽ biết mật khẩu. Nên mật khẩu của bạn được đặt bằng biến `APP_PASSWORD` trên Vercel – đăng nhập xong là dùng được ngay. Đừng ghi mật khẩu vào bất kỳ file nào trong kho GitHub. Muốn đổi sau này chỉ cần sửa biến đó (xem cuối file).
 
 Chuẩn bị: email, điện thoại nhận mã, khoảng 40 phút, mở sẵn Notepad để dán các đoạn cần ghi nhớ. **Nên dùng Chrome hoặc Edge trên máy tính.** Dùng **cùng tài khoản GitHub/Vercel** như app 44 cũng được – chỉ cần tạo dự án và cơ sở dữ liệu **mới**.
 
@@ -36,7 +36,7 @@ Chuẩn bị: email, điện thoại nhận mã, khoảng 40 phút, mở sẵn N
    - **Framework Preset**: chọn **Other**.
    - **Build Command**: để trống. **Output Directory** (nếu có ô): gõ `public`.
 4. Bấm mũi tên mở **Environment Variables**, thêm **2 biến** (gõ Key → gõ Value → bấm **Add** cho từng biến):
-   - Key: `APP_PASSWORD` — Value: `29081989@`
+   - Key: `APP_PASSWORD` — Value: mật khẩu đăng nhập của bạn (nên ≥ 12 ký tự, có chữ + số + ký hiệu)
    - Key: `SESSION_SECRET` — Value: một chuỗi bất kỳ dài ≥ 32 ký tự, gồm chữ và số, ví dụ gõ bừa `Zq7Lm2Xv9Pt4Rb8Nc3Hd6Jw1Ys5Ke0Ga` (đừng dùng đúng ví dụ này; **không dùng lại chuỗi của app 44**).
 5. Bấm **Deploy**, đợi chữ **Congratulations!** → **Continue to Dashboard**.
 6. Kiểm tra tên miền: ở Dashboard thấy địa chỉ `phongtro70.vercel.app`. Nếu chỉ thấy tên dạng `phongtro70-abc123.vercel.app`: vào **Settings** → **Domains** → gõ `phongtro70.vercel.app` → **Add** → chọn **Connect to an environment: Production** → **Save**.
@@ -62,7 +62,7 @@ Chuẩn bị: email, điện thoại nhận mã, khoảng 40 phút, mở sẵn N
 1. Mở https://phongtro70.vercel.app/api/health → phải thấy: `"api":"đang chạy"`, `daKetNoiNoiLuuDuLieu: true`, `kiemTraDocDuLieu: "ok"`, `daDatMatKhau: true`, `daDatSessionSecret: true`, `daKetNoiKhoAnh: true`.
 2. Mở https://phongtro70.vercel.app/kiemtra.html → trang tự kiểm tra và báo ✅/❌ từng mục.
 3. Mở https://phongtro70.vercel.app → thấy tiêu đề **PHÒNG TRỌ 70 HOÀNG SÂM** (chữ nhỏ **BusCafe** kế bên).
-4. Bấm đăng nhập → mật khẩu **29081989@** → thấy 7 phòng.
+4. Bấm đăng nhập → nhập mật khẩu bạn đã đặt ở Bước 3 → thấy 7 phòng.
 5. Cuối tab **Sao lưu** có thẻ **"Kiểm tra tất cả kết nối"** → bấm → mọi dòng phải ✅ (trừ Google Sheet nếu chưa làm Bước 8).
 6. Thử: Phòng 1 → **Thêm khách thuê** → chụp 2 mặt CCCD → lưu → tải lại trang vẫn còn dữ liệu. Sau thử xong có thể xóa khách thử (hoặc khôi phục file sao lưu trống).
 
@@ -95,6 +95,6 @@ Mỗi tháng vào **Sao lưu** → **Tải database.json** và **Tải Excel**, 
 | `/api/health` báo 404 | Kho GitHub thiếu thư mục `api` hoặc `vercel.json` → upload lại, Redeploy |
 | "Chưa kết nối nơi lưu dữ liệu" | Làm Bước 4 rồi Redeploy |
 | "Chưa kết nối kho ảnh" | Làm Bước 5 rồi Redeploy |
-| Không đăng nhập được | Kiểm tra biến `APP_PASSWORD` đúng `29081989@` (không thừa dấu cách), rồi Redeploy |
+| Không đăng nhập được | Kiểm tra biến `APP_PASSWORD` đúng mật khẩu bạn gõ (không thừa dấu cách), rồi Redeploy |
 | Thấy dữ liệu của nhà 44 | Bạn đã nối nhầm database cũ → Storage → ngắt database cũ, tạo database mới Bước 4 |
 Các hướng dẫn chi tiết khác nằm trong thư mục `docs/` (Render, CMD, Google Sheet, giới hạn miễn phí…).

@@ -7,7 +7,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   let promptText = ''; pg.on('dialog', (d) => d.accept(d.type() === 'prompt' ? promptText : undefined));
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; }; const H = 'http://localhost:4173/';
   const data = () => pg.evaluate(() => fetch('/api/data').then((x) => x.json()));
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   // --- Cần Thu / Cần Trả ---
   await pg.click('a[data-tab=debts]'); await pg.waitForSelector('button[data-act=debt-kind]');
   ok((await pg.locator('button[data-act=debt-kind]').allInnerTexts()).join('|').includes('Cần Thu') && (await pg.locator('button[data-act=debt-kind]').allInnerTexts()).join('|').includes('Cần Trả'), 'có hai mục Cần Thu và Cần Trả');

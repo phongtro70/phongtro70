@@ -11,7 +11,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   await page.click('.login-top'); await page.fill('input[name=password]', 'sai'); await page.click('button:has-text("ĐĂNG NHẬP")');
   await page.waitForSelector('text=Mật khẩu không chính xác'); ok(true, 'sai mật khẩu → báo lỗi, vẫn ở màn đăng nhập'); ok(page.url().includes('login'), 'không vào dashboard');
   await page.screenshot({ path: '/tmp/shots/02-login.png' });
-  await page.fill('input[name=password]', '29081989@'); await page.click('button:has-text("ĐĂNG NHẬP")'); await page.waitForSelector('text=Các phòng');
+  await page.fill('input[name=password]', 'MatKhauKiemThu-123'); await page.click('button:has-text("ĐĂNG NHẬP")'); await page.waitForSelector('text=Các phòng');
   ok(true, 'đúng mật khẩu → dashboard'); ok((await page.locator('.room-card:not(.owner-card)').count()) === 7, '7 phòng');
   await page.locator('.room-card', { hasText: 'Phòng 1' }).click(); await page.waitForSelector('button[data-act=movein]'); await page.click('button[data-act=movein]');
   await page.fill('[name=fullName]', 'Nguyễn Văn An'); await page.fill('[name=dob]', '1992-04-15'); await page.fill('[name=phone]', '0987654321'); await page.check('input[name=gender][value=male]');

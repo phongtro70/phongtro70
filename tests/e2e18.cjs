@@ -6,7 +6,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; }; const H = 'http://localhost:4173/';
   const call = async (m, p, body) => { const c = await pg.evaluate(() => fetch('/api/auth/session').then((r) => r.json()).then((j) => j.csrf)); return pg.evaluate(([m, p, body, c]) => fetch('/api/' + p, { method: m, headers: { 'content-type': 'application/json', 'x-csrf-token': c }, body: body ? JSON.stringify(body) : undefined }).then((r) => r.json()), [m, p, body, c]); };
   const get = () => pg.evaluate(() => fetch('/api/data').then((r) => r.json()));
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   // ---- nút Gọi ----
   let d = await get(); const t2 = d.db.tenants.find((t) => t.fullName === 'Khách Hai'); await call('POST', 'occupants', { tenantId: t2.id, occupant: { fullName: 'Người Thân', dob: '1995-01-01', gender: 'female', phone: '0911222333', cccd: '001095000009', address: 'HN' } });
   await pg.reload(); await pg.waitForSelector('.room-card'); await pg.locator('.room-card', { hasText: 'Phòng 2' }).click(); await pg.waitForSelector('.crow');

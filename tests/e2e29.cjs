@@ -6,7 +6,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const b = await chromium.launch({ args: ['--no-sandbox'] }); const ctx = await b.newContext({ viewport: { width: 1100, height: 1000 } }); const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('dialog', (d) => d.accept());
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; }; const H = 'http://localhost:4173/';
   const data = () => pg.evaluate(() => fetch('/api/data').then((x) => x.json()));
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   const nav = (await pg.locator('nav.nav a').allInnerTexts()).map((s) => s.trim()); ok(JSON.stringify(nav) === JSON.stringify(['Tổng quan', 'Khách thuê', 'Báo Cáo Tiền Trọ', 'Nhắc Nợ (Riêng)', 'Thu Chi (Riêng)', 'Sao lưu']), 'thứ tự tab: ' + nav.join(' | '));
   const dash = await pg.innerHTML('main'); ok(dash.indexOf('dash-cal') < dash.search(/SO VỚI THÁNG TRƯỚC|so với tháng trước/i) || !/so với tháng trước/i.test(dash), 'điện nước so với tháng trước nằm dưới lịch');
   // thêm khách + người ở cùng

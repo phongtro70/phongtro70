@@ -4,7 +4,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, acceptDownloads: true }); const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', (e) => errs.push(e.message));
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; };
-  await pg.goto('http://localhost:4173/#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto('http://localhost:4173/#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   const id = await pg.evaluate(() => fetch('/api/data').then((r) => r.json()).then((j) => j.db.invoices.filter((i) => i.elec).slice(-1)[0].id));
   await pg.goto('http://localhost:4173/#/invoice/' + id); await pg.waitForSelector('#bill');
   const t = await pg.innerText('#bill');

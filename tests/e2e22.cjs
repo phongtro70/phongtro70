@@ -6,7 +6,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; }; const H = 'http://localhost:4173/'; const iso = (n) => new Date(Date.now() + 7 * 3600e3 + n * 86400000).toISOString().slice(0, 10);
   const call = async (m, p, body) => { const c = await pg.evaluate(() => fetch('/api/auth/session').then((r) => r.json()).then((j) => j.csrf)); return pg.evaluate(([m, p, body, c]) => fetch('/api/' + p, { method: m, headers: { 'content-type': 'application/json', 'x-csrf-token': c }, body: body ? JSON.stringify(body) : undefined }).then((r) => r.json()), [m, p, body, c]); };
   const get = () => pg.evaluate(() => fetch('/api/data').then((r) => r.json()));
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   // ---- khách Phòng 4 còn nợ (đã tính) ----
   const x = new Date(Date.now() + 7 * 3600e3 + 3 * 86400000); x.setUTCMonth(x.getUTCMonth() - 1);
   await call('POST', 'tenants', { roomId: 'room-4', startDate: x.toISOString().slice(0, 10), paidAlready: true, rent: 1000000, elecPrice: 3000, waterPrice: 10000, initElec: 100, initWater: 10, tenant: { fullName: 'Khách Tư', dob: '1990-01-01', gender: 'male', phone: '0900000004', cccd: '001090000004', cccdIssueDate: '2020-01-01', cccdIssuePlace: 'HN', address: 'HN' } });

@@ -6,7 +6,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; }; const H = 'http://localhost:4173/'; const iso = (n) => new Date(Date.now() + 7 * 3600e3 + n * 86400000).toISOString().slice(0, 10);
   const call = async (m, p, body) => { const c = await pg.evaluate(() => fetch('/api/auth/session').then((r) => r.json()).then((j) => j.csrf)); return pg.evaluate(([m, p, body, c]) => fetch('/api/' + p, { method: m, headers: { 'content-type': 'application/json', 'x-csrf-token': c }, body: body ? JSON.stringify(body) : undefined }).then((r) => r.json()), [m, p, body, c]); };
   const get = () => pg.evaluate(() => fetch('/api/data').then((r) => r.json()));
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   await call('PUT', 'rooms/room-5', { status: 'notready', note: 'Đang Bán Trứng' }); await call('PUT', 'rooms/room-6', { status: 'repair', note: 'Thay ống nước' }); await pg.reload(); await pg.waitForSelector('.room-card');
   // ---- tình trạng chỉ là chữ màu ----
   const sx = await pg.evaluate(() => [...document.querySelectorAll('.room-card .stx')].map((e) => ({ t: e.innerText.split('·')[0].trim(), bg: getComputedStyle(e).backgroundColor, bd: getComputedStyle(e).borderTopWidth, c: getComputedStyle(e).color }))); const set = (t) => sx.find((x) => x.t === t);

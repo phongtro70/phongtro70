@@ -5,7 +5,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true }); const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('dialog', (d) => d.accept());
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; };
   const H = 'http://localhost:4173/'; const txt = () => pg.innerText('body'); const api = (p) => pg.evaluate((u) => fetch(u).then((r) => r.json()), '/api/' + p);
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   const room = async (n) => { await pg.goto(H + '#/dashboard'); await pg.locator('.room-card', { hasText: n }).click(); await pg.waitForSelector('h2:has-text("' + n + '")'); };
   // 1. Đổi giá
   await room('Phòng 1'); await pg.click('button:has-text("Thay đổi giá phòng")'); await pg.fill('form[data-form=price] [name=rent]', '1300000'); await pg.fill('[name=reason]', 'tăng giá'); await pg.click('button:has-text("LƯU GIÁ MỚI")'); await pg.waitForSelector('text=1.300.000'); ok(true, 'đổi giá: giá mới hiện, áp dụng từ kỳ sau');

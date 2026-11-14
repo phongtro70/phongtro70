@@ -3,7 +3,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
   const page = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage(); const errs = []; page.on('pageerror', (e) => errs.push(e.message));
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; };
-  await page.goto('http://localhost:4173/#/login'); await page.fill('input[name=password]', '29081989@'); await page.click('button:has-text("ĐĂNG NHẬP")'); await page.waitForSelector('text=Các phòng');
+  await page.goto('http://localhost:4173/#/login'); await page.fill('input[name=password]', 'MatKhauKiemThu-123'); await page.click('button:has-text("ĐĂNG NHẬP")'); await page.waitForSelector('text=Các phòng');
   await page.locator('.room-card', { hasText: 'Phòng 2' }).click(); await page.click('button[data-act=movein]');
   await page.fill('[name=fullName]', 'Lê Thị Cúc'); await page.fill('[name=dob]', '1990-01-01'); await page.fill('[name=phone]', '0911222333'); await page.check('input[name=gender][value=female]');
   await page.fill('[name=cccd]', '001090009999'); await page.fill('[name=cccdIssueDate]', '2020-01-01'); await page.fill('[name=cccdIssuePlace]', 'Hà Nội'); await page.fill('[name=address]', 'Nam Định');

@@ -9,7 +9,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   ok((await pg.locator('.pub-foot').count()) === 0 && !/Ghi Điện & Nước - Tính Tiền Phòng/.test(await pg.innerText('body')), 'đã bỏ nút "Ghi Điện & Nước - Tính Tiền Phòng"');
   const th = await pg.evaluate(() => ({ bg: getComputedStyle(document.body).backgroundColor, r: parseFloat(getComputedStyle(document.querySelector('.login-top .btn')).borderRadius), card: parseFloat(getComputedStyle(document.querySelector('.stat')).borderRadius) }));
   ok(/rgba\(9, 128, 255, 0\.1\)/.test(th.bg) && th.r <= 12 && th.card <= 16, `nền trang = rgb(9 128 255 / 10%), bo góc nhỏ (nút ${th.r}px, thẻ ${th.card}px)`);
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   ok(await pg.evaluate(() => sessionStorage.getItem('pt70_tab') === '1'), 'đăng nhập: có cờ phiên của tab (chỉ là cờ, không chứa bí mật)');
   const dash = await pg.innerText('body'); ok(!bad(dash) && !/Phòng đang thuê|Phòng trống|Phòng sửa chữa|Tổng tiền đã thu/.test(dash.replace(/Phòng trống\s*\n/g, '')) && /Phòng cần thu tiền/.test(dash), 'Tổng quan: đã bỏ các thẻ đếm trống/đang ở/sửa chữa/tổng đã thu; còn "Phòng cần thu tiền"');
   ok((await pg.locator('.nav a').count()) === 4 && !/Lịch/.test(await pg.innerText('.nav')), 'thanh điều hướng 4 mục (không còn tab Lịch)'); ok(await pg.isVisible('.dash-cal .cal') && (await pg.locator('.dash-cal .calwrap').count()) === 1, 'lịch + danh sách sự kiện nằm ngay trên trang chủ (2 cột)');

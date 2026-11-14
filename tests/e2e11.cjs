@@ -5,7 +5,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, permissions: ['clipboard-read', 'clipboard-write'] }); const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('dialog', (d) => d.accept());
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; };
   const H = 'http://localhost:4173/';
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   const d0 = await pg.evaluate(() => fetch('/api/data').then((r) => r.json())); const next = d0.derived.rentals[Object.keys(d0.derived.rentals)[0]];
   // Đồng hồ tổng mới (hôm nay) khi phòng 1 chưa ghi số mới → kỳ Chủ Nhà phải "Đang chờ chốt"
   // Phòng 3 có khách từ trước đầu tháng nhưng CHƯA ghi chỉ số trong tháng này → tháng Chủ Nhà phải "Đang chờ" phòng đó

@@ -6,7 +6,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; }; const H = 'http://localhost:4173/';
   const call = async (m, p, body) => { const c = await pg.evaluate(() => fetch('/api/auth/session').then((r) => r.json()).then((j) => j.csrf)); return pg.evaluate(([m, p, body, c]) => fetch('/api/' + p, { method: m, headers: { 'content-type': 'application/json', 'x-csrf-token': c }, body: body ? JSON.stringify(body) : undefined }).then((r) => r.json()), [m, p, body, c]); };
   const get = () => pg.evaluate(() => fetch('/api/data').then((r) => r.json()));
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   // ---- lời nhắc điện thoại ----
   const t20 = new Date(Date.now() + 7 * 3600e3 + 20 * 86400000); await call('POST', 'events', { name: 'Giỗ ông nội', calendar: 'solar', day: t20.getUTCDate(), month: t20.getUTCMonth() + 1, year: t20.getUTCFullYear(), repeat: true, color: '#ff9500', note: 'ghi chú riêng' });
   await pg.reload(); await pg.waitForSelector('.evside'); await pg.locator('.evside [data-act=ev-remind]').first().click(); await pg.waitForSelector('form[data-form=remind]');

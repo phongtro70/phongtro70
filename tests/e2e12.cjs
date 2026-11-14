@@ -4,7 +4,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, acceptDownloads: true }); const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('dialog', (d) => d.accept());
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; };
-  const H = 'http://localhost:4173/'; await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  const H = 'http://localhost:4173/'; await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   const inv = await pg.evaluate(() => fetch('/api/data').then((r) => r.json()).then((j) => j.db.invoices.filter((i) => i.elec).slice(-1)[0].id));
   await pg.goto(H + '#/invoice/' + inv); await pg.waitForSelector('#bill'); ok(!(await pg.isVisible('.bbank')), 'chưa khai báo ngân hàng: hóa đơn không có khối chuyển khoản');
   await pg.goto(H + '#/room/room-owner'); await pg.waitForSelector('form[data-form=bank]'); await pg.fill('[name=bankName]', 'Vietcombank'); await pg.fill('[name=accountNumber]', '0123 456 789'); await pg.fill('[name=accountName]', 'nguyễn văn a'); await pg.click('button:has-text("LƯU THÔNG TIN NHẬN TIỀN")'); await pg.waitForTimeout(600);

@@ -1,6 +1,6 @@
 // Máy chủ thử nghiệm cục bộ: phục vụ public/ + /api với GitHub GIẢ LẬP (bộ nhớ). Chỉ dùng để kiểm thử.
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
-process.env.APP_PASSWORD = '29081989@'; process.env.SESSION_SECRET = 'e'.repeat(40); process.env.E2E_FAKE_BLOB = '1';
+process.env.APP_PASSWORD = 'MatKhauKiemThu-123'; process.env.SESSION_SECRET = 'e'.repeat(40); process.env.E2E_FAKE_BLOB = '1';
 const { fakeStore } = await import('../lib/blob.js');
 if (process.env.E2E_SEED) fakeStore.files.set('data/database.json', { buf: Buffer.from(fs.readFileSync(process.env.E2E_SEED, 'utf8')), etag: '"seed"', at: new Date().toISOString() });
 const { entry } = await import('../lib/router.js');

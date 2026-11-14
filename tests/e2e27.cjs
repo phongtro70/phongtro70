@@ -6,7 +6,7 @@ const { chromium } = require(require('child_process').execSync('npm root -g').to
   const b = await chromium.launch({ args: ['--no-sandbox'] }); const ctx = await b.newContext({ viewport: { width: 1100, height: 1000 } }); const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('dialog', (d) => d.accept());
   const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; }; const H = 'http://localhost:4173/';
   const data = () => pg.evaluate(() => fetch('/api/data').then((x) => x.json()));
-  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', '29081989@'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
+  await pg.goto(H + '#/login'); await pg.fill('input[name=password]', 'MatKhauKiemThu-123'); await pg.click('button:has-text("ĐĂNG NHẬP")'); await pg.waitForSelector('.room-card');
   await pg.click('a[data-tab=debts]'); await pg.waitForSelector('button[data-act=debt-add]'); ok(true, 'có tab Nhắc Nợ');
   await pg.click('button[data-act=unit-list]'); await pg.waitForSelector('form[data-form=unit]'); await pg.fill('form[data-form=unit] input[name=name]', 'Anh Hùng sửa xe'); await pg.fill('form[data-form=unit] input[name=phone]', '0988111222'); await pg.click('form[data-form=unit] button[type=submit]'); await pg.waitForTimeout(700);
   let d = await data(); ok(d.db.debtUnits.length === 1 && d.db.debtUnits[0].name === 'Anh Hùng sửa xe', 'thêm đơn vị nợ'); await pg.keyboard.press('Escape'); await pg.evaluate(() => document.querySelector('[data-act=close-modal],.dlg-head button')?.click());
