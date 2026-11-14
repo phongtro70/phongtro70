@@ -49,7 +49,7 @@ Chuẩn bị: email, điện thoại nhận mã, ~30 phút. Mở sẵn Notepad �
 
 ## Bước 7. Kiểm tra thực tế
 1. Mở địa chỉ `https://phong-tro-70-website-xxxx.vercel.app` bằng điện thoại: thấy "PHÒNG TRỌ 70 HOÀNG SÂM", dòng **Lưu trữ ảnh: 0%**, nút **Ghi Điện & Nước - Tính Tiền Phòng**. Không có dòng cảnh báo đỏ nào.
-2. Đăng nhập → thấy 7 phòng → **Phòng 1** → **+ Thêm khách thuê** → điền thông tin, chụp 2 mặt CCCD → **LƯU KHÁCH THUÊ**.
+2. Đăng nhập → thấy 5 phòng → **Phòng 1** → **+ Thêm khách thuê** → điền thông tin, chụp 2 mặt CCCD → **LƯU KHÁCH THUÊ**.
 3. Mở web bằng cửa sổ ẩn danh (chưa đăng nhập): thấy "PHÒNG 1 – Chưa thanh toán", **không có tên khách**.
 4. Tải lại trang, đăng xuất rồi đăng nhập, mở bằng thiết bị khác: dữ liệu vẫn còn.
 5. Hồ sơ khách → **Xem ảnh**: ảnh hiện ra.

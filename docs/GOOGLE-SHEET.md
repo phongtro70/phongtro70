@@ -75,5 +75,5 @@ node scripts\giai-nen-sao-luu.mjs C:\duong-dan\SaoLuuDayDu.csv
 ## An toàn & giới hạn
 - Ai có **URL + mã bí mật** mới ghi được vào Sheet của bạn. Hãy giữ kín cả hai; nếu lộ: đổi `SECRET` trong Apps Script → **Triển khai** → **Quản lý bản triển khai** → ✏ → **Phiên bản mới** → **Triển khai**, rồi sửa biến trên Vercel và Redeploy.
 - Mỗi lần lưu có thể chậm thêm 1–3 giây khi Google phản hồi chậm; tối đa chờ 9 giây rồi bỏ qua (dữ liệu chính vẫn lưu). Dòng bị lỡ sẽ có trong bản sao lưu đầy đủ hằng ngày và nút "Gửi toàn bộ chi tiết".
-- Google Sheet có giới hạn ~10 triệu ô; với nhà trọ 7 phòng dùng được rất nhiều năm.
+- Google Sheet có giới hạn ~10 triệu ô; với nhà trọ 5 phòng dùng được rất nhiều năm.
 - Đoạn mã Apps Script tôi chỉ chạy thử bằng bản mô phỏng; hãy bấm **Kiểm tra kết nối** và **Gửi dòng thử** ngay sau khi cài để chắc chắn.

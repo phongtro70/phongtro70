@@ -24,7 +24,7 @@
 
 ## Chạy nhiều năm không cần chỉnh sửa – cái gì tự lo, cái gì bạn phải nhớ
 **Hệ thống tự lo:** sao lưu mỗi tháng (tự hết hạn sau 2 năm); cảnh báo khi dung lượng ảnh ≥ 90% kèm nút dọn; cảnh báo khi mất kết nối Upstash/Blob hoặc chạm hạn mức; không dùng GitHub token và không có API key nào do bạn phải gia hạn (khóa kết nối Upstash/Blob do Vercel cấp và không có hạn dùng); không có máy chủ riêng cần bảo trì.
-**Dung lượng thực tế:** dữ liệu JSON chỉ ~vài trăm KB sau nhiều năm (7 phòng ≈ 100 hóa đơn/năm). Thứ duy nhất tốn chỗ là ảnh CCCD: ~1–2 MB/ảnh. 1 GB đủ ~300 khách; với 7 phòng thì thường dùng được hàng chục năm, nút dọn dữ liệu chủ yếu là bảo hiểm.
+**Dung lượng thực tế:** dữ liệu JSON chỉ ~vài trăm KB sau nhiều năm (5 phòng ≈ 70 hóa đơn/năm). Thứ duy nhất tốn chỗ là ảnh CCCD: ~1–2 MB/ảnh. 1 GB đủ ~300 khách; với 5 phòng thì thường dùng được hàng chục năm, nút dọn dữ liệu chủ yếu là bảo hiểm.
 **Việc bạn vẫn phải làm (không tránh được):**
 1. (Không còn việc thay token GitHub nữa.) Nếu có thông báo đỏ về Upstash/Blob thì làm theo bảng "Khi gặp lỗi" trong hướng dẫn.
 2. Mỗi tháng tải `database.json` về cất nơi khác (khuyến nghị) – bản tự động nằm cùng tài khoản GitHub nên không thay thế được bản của bạn.

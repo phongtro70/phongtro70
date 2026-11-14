@@ -1,3 +1,6 @@
+# Phiên bản 2026-11-30-d
+- **Nhà 70 có 5 phòng + 1 phòng Chủ Nhà**: dữ liệu mới tạo 5 phòng (Phòng 1–5) và thẻ Chủ Nhà. Nếu dữ liệu cũ đã có Phòng 6, Phòng 7 tạo sẵn mà **còn trống và chưa từng có khách/hóa đơn/điện nước**, app tự bỏ 2 phòng đó (chỉ một lần). Phòng nào đã có dữ liệu thì giữ nguyên. Muốn thêm phòng sau này: **+ Thêm phòng** ở Tổng quan.
+
 # Phiên bản 2026-11-30-c
 - **Kho ảnh Vercel Blob nhận cách kết nối mới (OIDC)**: Vercel nay nối kho Blob bằng biến `BLOB_STORE_ID` (không còn tự tạo `BLOB_READ_WRITE_TOKEN`). App nhận cả hai kiểu, nên chỉ cần nối kho `cccd70` vào dự án rồi Redeploy (bỏ tích "Use existing Build Cache"). `BLOB_READ_WRITE_TOKEN` vẫn cần nếu chạy trên Render.
 - README và hướng dẫn kết nối không còn ghi mật khẩu thật; file kiểm thử dùng mật khẩu giả.

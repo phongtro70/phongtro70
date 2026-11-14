@@ -18,7 +18,7 @@
 2. **Đổi mật khẩu** trên Vercel (Settings → Environment Variables → `APP_PASSWORD` → ⋯ → Edit → Save → Redeploy). Nên dài ≥ 12 ký tự có chữ + số + ký hiệu.
 3. **Kết nối Google Sheet** (docs/GOOGLE-SHEET.md hoặc hướng dẫn ngay trong web: tab Sao lưu).
 4. Mỗi tháng bấm **Sao lưu → Tải database.json** cất ở Google Drive.
-5. Nhập dữ liệu thật theo thứ tự: 7 phòng → khách → (khai báo đồng hồ tổng ở thẻ **Chủ Nhà**) → ngày chốt số điện nước đúng ngày đọc đồng hồ.
+5. Nhập dữ liệu thật theo thứ tự: 5 phòng → khách → (khai báo đồng hồ tổng ở thẻ **Chủ Nhà**) → ngày chốt số điện nước đúng ngày đọc đồng hồ.
 6. Mở `/kiemtra.html` sau MỖI lần cập nhật phiên bản để chắc mọi thứ ✅.
 
 ## D. Giới hạn kỹ thuật cần nhớ
