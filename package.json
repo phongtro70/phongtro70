@@ -1,0 +1,17 @@
+{
+  "name": "phong-tro-70-website",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Quản lý Phòng Trọ 70 Hoàng Sâm",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/run-tests.js"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.6.1"
+  }
+}

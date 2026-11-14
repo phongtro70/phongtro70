@@ -1,0 +1,45 @@
+const { chromium } = require(require('child_process').execSync('npm root -g').toString().trim() + '/playwright');
+(async () => {
+  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  const page = await ctx.newPage(); const errs = [];
+  page.on('pageerror', (e) => errs.push('PAGEERR ' + e.message)); page.on('console', (m) => { if (m.type() === 'error' && !/fonts|ERR_(NAME|INTERNET|CONNECTION)/.test(m.text())) errs.push('CONSOLE ' + m.text()); });
+  const ok = (c, m) => { console.log(c ? '  ✓' : '  ✗ FAIL', m); if (!c) process.exitCode = 1; };
+  await page.goto('http://localhost:4173/'); await page.waitForSelector('text=TỔNG QUAN CẦN XỬ LÝ');
+  ok(await page.isVisible('text=Không có việc cần xử lý'), 'trang ngoài hiển thị tổng quan khi chưa có việc');
+  await page.screenshot({ path: '/tmp/shots/01-public.png' });
+  await page.click('.login-top'); await page.fill('input[name=password]', 'sai'); await page.click('button:has-text("ĐĂNG NHẬP")');
+  await page.waitForSelector('text=Mật khẩu không chính xác'); ok(true, 'sai mật khẩu → báo lỗi, vẫn ở màn đăng nhập'); ok(page.url().includes('login'), 'không vào dashboard');
+  await page.screenshot({ path: '/tmp/shots/02-login.png' });
+  await page.fill('input[name=password]', '29081989@'); await page.click('button:has-text("ĐĂNG NHẬP")'); await page.waitForSelector('text=Các phòng');
+  ok(true, 'đúng mật khẩu → dashboard'); ok((await page.locator('.room-card:not(.owner-card)').count()) === 7, '7 phòng');
+  await page.locator('.room-card', { hasText: 'Phòng 1' }).click(); await page.waitForSelector('button[data-act=movein]'); await page.click('button[data-act=movein]');
+  await page.fill('[name=fullName]', 'Nguyễn Văn An'); await page.fill('[name=dob]', '1992-04-15'); await page.fill('[name=phone]', '0987654321'); await page.check('input[name=gender][value=male]');
+  await page.fill('[name=cccd]', '001092001234'); await page.fill('[name=cccdIssueDate]', '2021-05-20'); await page.fill('[name=cccdIssuePlace]', 'Cục Cảnh sát QLHC về TTXH'); await page.fill('[name=address]', 'Thanh Hóa');
+  const today = await page.inputValue('[name=startDate]'); await page.fill('[name=rent]', '1.200.000'); await page.fill('[name=elecPrice]', '3500'); await page.fill('[name=waterPrice]', '15000'); await page.fill('[name=initElec]', '100'); await page.fill('[name=initWater]', '10');
+  await page.click('button[data-act=add-occ]'); await page.fill('[name=o_name]', 'Nguyễn Thị Bình'); await page.fill('[name=o_dob]', '2016-01-02'); await page.check('[name=o_noid]');
+  ok(await page.isVisible('text=không bắt buộc'), 'ảnh CCCD khách thuê không bắt buộc (ghi rõ trên form)');
+  await page.setInputFiles('input[data-slot=front] >> nth=0', '/tmp/cccd.jpg'); await page.waitForSelector('#prev-front img'); await page.setInputFiles('input[data-slot=back] >> nth=1', '/tmp/cccd.jpg'); await page.waitForSelector('#prev-back img');
+  ok(true, 'xem trước ảnh hai mặt'); await page.click('[data-act=id-rot][data-slot=front]'); await page.waitForTimeout(400);
+  await page.screenshot({ path: '/tmp/shots/03-movein.png' });
+  await page.uncheck('[name=paidAlready]'); await page.click('button:has-text("LƯU KHÁCH THUÊ")'); await page.waitForSelector('text=Nguyễn Văn An', { timeout: 8000 }); ok(true, 'lưu khách thành công');
+  const d = await (await page.request.get('http://localhost:4173/api/data')).status(); ok(d === 200, 'đã đăng nhập thì /api/data trả 200');
+  await page.screenshot({ path: '/tmp/shots/04-room.png', fullPage: true });
+  // trang ngoài (ngữ cảnh mới, chưa đăng nhập)
+  const c2 = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 }); const p2 = await c2.newPage(); await p2.goto('http://localhost:4173/'); await p2.waitForSelector('text=PHÒNG 1');
+  const body = await p2.innerText('body'); ok(body.includes('Không có việc cần xử lý') && !body.includes('Chưa thanh toán'), 'vào ở nhưng chưa tới kỳ ghi điện nước: trang ngoài CHƯA báo nợ (không có việc cần xử lý)');
+  ok(!/0987|001092|Thanh Hóa|Bình|1992/.test(body), 'trang ngoài KHÔNG lộ SĐT/CCCD/địa chỉ/ngày sinh/tên người ở cùng'); await p2.screenshot({ path: '/tmp/shots/05-public-notice.png', fullPage: true });
+  // thanh toán một phần
+  await page.click('button[data-act=pay-month]'); await page.fill('form[data-form=pay] [name=amount]', '700000'); await page.click('form[data-form=pay] button[type=submit]'); await page.waitForTimeout(800);
+  await p2.reload(); await p2.waitForSelector('text=Không có việc cần xử lý'); const b2 = await p2.innerText('body'); ok(!b2.includes('Đã thanh toán một phần'), 'thanh toán một phần khi chưa tới kỳ: vẫn chưa tính là nợ trên trang ngoài');
+  await page.click('button[data-act=pay-month]'); await page.click('text=Trả đủ'); await page.click('form[data-form=pay] button[type=submit]'); await page.waitForTimeout(800);
+  await p2.reload(); await p2.waitForSelector('text=Không có việc cần xử lý'); ok(true, 'trả đủ → thông báo biến mất');
+  await page.goto('http://localhost:4173/#/tenants'); await page.waitForSelector('text=Nguyễn Văn An'); await page.click('text=Nguyễn Văn An'); await page.waitForSelector('text=Người ở cùng'); await page.waitForSelector('.idprev img.idimg'); 
+  await page.waitForFunction(() => { const i = document.querySelector('.idprev img.idimg'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 8000 }).catch(() => {}); ok(await page.evaluate(() => document.querySelector('.idprev img.idimg').complete && document.querySelector('.idprev img.idimg').naturalWidth > 0), 'xem ảnh CCCD qua API đã xác thực'); await page.screenshot({ path: '/tmp/shots/06-tenant.png', fullPage: true });
+  await page.goto('http://localhost:4173/#/dashboard'); await page.screenshot({ path: '/tmp/shots/07-dashboard.png', fullPage: true });
+  await page.goto('http://localhost:4173/#/backup'); await page.waitForSelector('text=Sao lưu dữ liệu'); await page.goto('http://localhost:4173/#/reports'); await page.waitForSelector('text=Tổng tiền đã thu'); ok(true, 'báo cáo & sao lưu mở được');
+  await page.click('button:has-text("Đăng xuất")'); await page.waitForSelector('.login-top'); ok(true, 'đăng xuất về màn hình ngoài');
+  const r = await page.evaluate(() => fetch('/api/data').then((x) => x.status)); ok(r === 401, 'sau đăng xuất /api/data = 401');
+  console.log(errs.length ? 'LỖI TRÌNH DUYỆT:\n' + errs.join('\n') : 'Không có lỗi JS/console'); if (errs.length) process.exitCode = 1;
+  await b.close();
+})().catch((e) => { console.error('E2E LỖI', e.message.slice(0, 400)); process.exit(1); });
