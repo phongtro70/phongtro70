@@ -2,7 +2,7 @@
 
 > **Bản độc lập cho nhà 70.** Đọc `HUONG-DAN-KET-NOI-PHONG-TRO-70.md` để kết nối từ đầu (GitHub, Vercel `phongtro70.vercel.app`, Upstash, Blob, Google Sheet). Mật khẩu đăng nhập đặt bằng biến `APP_PASSWORD` trên Vercel (không ghi trong mã nguồn).
 
-Website dùng thật cho **một chủ nhà**, ban đầu 7 phòng, mở rộng được. Chạy hoàn toàn trên gói miễn phí GitHub + Vercel.
+Website dùng thật cho **một chủ nhà**, ban đầu 5 phòng + 1 phòng Chủ Nhà, mở rộng được. Chạy hoàn toàn trên gói miễn phí GitHub + Vercel.
 
 ## Kiến trúc (3 lớp, không GitHub token, không Supabase)
 | Thành phần | Nơi chạy | Ghi chú |

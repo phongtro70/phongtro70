@@ -62,7 +62,7 @@ Chuẩn bị: email, điện thoại nhận mã, khoảng 40 phút, mở sẵn N
 1. Mở https://phongtro70.vercel.app/api/health → phải thấy: `"api":"đang chạy"`, `daKetNoiNoiLuuDuLieu: true`, `kiemTraDocDuLieu: "ok"`, `daDatMatKhau: true`, `daDatSessionSecret: true`, `daKetNoiKhoAnh: true`.
 2. Mở https://phongtro70.vercel.app/kiemtra.html → trang tự kiểm tra và báo ✅/❌ từng mục.
 3. Mở https://phongtro70.vercel.app → thấy tiêu đề **PHÒNG TRỌ 70 HOÀNG SÂM** (chữ nhỏ **BusCafe** kế bên).
-4. Bấm đăng nhập → nhập mật khẩu bạn đã đặt ở Bước 3 → thấy 7 phòng.
+4. Bấm đăng nhập → nhập mật khẩu bạn đã đặt ở Bước 3 → thấy 5 phòng và thẻ Chủ Nhà.
 5. Cuối tab **Sao lưu** có thẻ **"Kiểm tra tất cả kết nối"** → bấm → mọi dòng phải ✅ (trừ Google Sheet nếu chưa làm Bước 8).
 6. Thử: Phòng 1 → **Thêm khách thuê** → chụp 2 mặt CCCD → lưu → tải lại trang vẫn còn dữ liệu. Sau thử xong có thể xóa khách thử (hoặc khôi phục file sao lưu trống).
 
@@ -80,7 +80,7 @@ Làm đúng theo file **`docs/GOOGLE-SHEET.md`** (đã đổi tên sẵn cho app
 
 ## Bước 10. Nhập thông tin chủ nhà và bắt đầu dùng
 - Vào phòng **Chủ Nhà** → điền "Thông tin Bên A" (họ tên, CCCD…, **Công An Quản Lý** ví dụ "Công An Phường …", địa chỉ nhà trọ `70 Hoàng Sâm, …`) → hợp đồng và bản khai CT01 tự điền.
-- Đổi tên/giá/số phòng nếu nhà 70 không đúng 7 phòng: dùng **Thêm phòng** và **Sửa Tình Trạng Phòng** ngay ở Tổng quan.
+- Đổi tên/giá/số phòng nếu nhà 70 không đúng 5 phòng: dùng **Thêm phòng** và **Sửa Tình Trạng Phòng** ngay ở Tổng quan.
 
 ---
 ## Đổi mật khẩu sau này

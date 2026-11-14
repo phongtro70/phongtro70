@@ -239,7 +239,7 @@ t('phòng Chủ Nhà (theo THÁNG): số mới − số cũ − tổng các phò
   for (const d of ['2026-02-01', '2026-02-10', '2026-02-28']) { const s = ownerSeries(mk(d)); assert.equal(s.length, 1, d); assert.equal(s[0].ym, '2026-02'); assert.equal(Math.round(s[0].total.elec), 130); assert.equal(Math.round(s[0].rooms.elec), 50); assert.equal(Math.round(s[0].owner.elec), 80, 'Chủ Nhà dùng 80 số dù ghi số tổng ngày ' + d); assert.equal(Math.round(s[0].owner.water), 10); assert.equal(s[0].complete, true); }
   assert.equal(ownerSeries(mk('2026-02-28'))[0].completedOn, '2026-02-28', 'ghi số tổng muộn hơn phòng cuối: chốt ngày ghi số tổng'); assert.equal(ownerSeries(mk('2026-02-01'))[0].completedOn, '2026-02-10', 'ghi sớm hơn: chốt ngày phòng cuối cùng ghi');
   const db = mk('2026-02-10'); db.masterReadings.push({ id: 'm3', date: '2026-02-10', elec: 5140, water: 521, note: '', createdAt: '3' }); const s2 = ownerSeries(db); assert.equal(s2.length, 1, 'hai lần ghi trong cùng 1 tháng gộp thành 1 kỳ (lấy số mới nhất)'); assert.equal(Math.round(s2[0].total.elec), 140);
-  validateDb(db); assert.equal(db.rooms.filter((r) => !r.kind).length, 7);
+  validateDb(db); assert.equal(db.rooms.filter((r) => !r.kind).length, 5);
 });
 t('đồng hồ tổng: cảnh báo khi chủ nhà dùng tăng > 20% so với trung bình (sau khi mọi phòng đã chốt số)', () => {
   const { db } = monthsDb([0, 0, 0, 0], [0, 0, 0, 0]); const base = { elec: 5000, water: 500 }; const ms = [['2026-01-10', 0, 0], ['2026-02-10', 100, 10], ['2026-03-10', 200, 20], ['2026-04-10', 300, 30], ['2026-05-10', 450, 30]];

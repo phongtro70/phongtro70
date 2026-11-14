@@ -2,6 +2,8 @@
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
 process.env.APP_PASSWORD = 'MatKhauKiemThu-123'; process.env.SESSION_SECRET = 'e'.repeat(40); process.env.E2E_FAKE_BLOB = '1';
 const { fakeStore } = await import('../lib/blob.js');
+// Các bài thử trình duyệt cũ dùng tới Phòng 6, 7: khi không có dữ liệu mẫu thì tạo sẵn 7 phòng CHỈ cho môi trường thử
+if (!process.env.E2E_SEED) { const { emptyDb } = await import('../lib/schema.js'); const now = new Date().toISOString(); const d = emptyDb(now); d.rooms.splice(5, 0, ...[6, 7].map((n) => ({ id: `room-${n}`, name: `Phòng ${n}`, status: 'empty', note: '', createdAt: now }))); fakeStore.files.set('data/database.json', { buf: Buffer.from(JSON.stringify(d)), etag: '"seed0"', at: now }); }
 if (process.env.E2E_SEED) fakeStore.files.set('data/database.json', { buf: Buffer.from(fs.readFileSync(process.env.E2E_SEED, 'utf8')), etag: '"seed"', at: new Date().toISOString() });
 const { entry } = await import('../lib/router.js');
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.jpg': 'image/jpeg' };

@@ -41,7 +41,7 @@ await t('đúng mật khẩu → có phiên; thiếu CSRF bị chặn khi ghi', 
   const r = await call('POST', '/api/auth/login', { password: 'mat-khau-test' }, false); assert.equal(r.status, 200); csrf = r.body.csrf;
   const bad = await fetch(base + '/api/rooms', { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: '{"name":"X"}' }); assert.equal(bad.status, 403);
 });
-await t('lần đầu: tạo database.json với 7 phòng', async () => { const r = await call('GET', '/api/data'); assert.equal(r.body.db.rooms.filter((r) => !r.kind).length, 7); });
+await t('lần đầu: tạo database.json với 5 phòng', async () => { const r = await call('GET', '/api/data'); assert.equal(r.body.db.rooms.filter((r) => !r.kind).length, 5); });
 await t('thêm khách + hóa đơn kỳ đầu được GHI vào "GitHub"', async () => {
   const today = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
   const r = await call('POST', '/api/tenants', { roomId: 'room-1', startDate: today, rent: 1200000, elecPrice: 3500, waterPrice: 15000, initElec: 100, initWater: 10, tenant: person, occupants: [{ fullName: 'Con', dob: '2015-01-01', gender: 'male', noId: true }] });
