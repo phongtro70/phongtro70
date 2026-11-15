@@ -452,3 +452,4 @@ fieldset legend{font-weight:800}fieldset:nth-of-type(1){border-color:rgb(9 128 2
 .rp-v{display:block;min-width:0}.tbl td.r .rp-v{text-align:right}.rp-head .rp-tot{display:flex;flex-wrap:wrap;gap:2px 14px;order:3;flex-basis:100%}.rp-head h3{flex:1}
 @media(max-width:700px){.reload-fab{padding:10px 5px;font-size:.75rem;opacity:.85}}
 @media(max-width:760px){.tbl.stack td .rp-v{text-align:right}}
+.cccd-ow{display:flex!important;gap:10px;align-items:flex-start;margin:4px 0 12px;font-weight:500}.cccd-ow input{width:auto!important;margin-top:4px;flex:none}

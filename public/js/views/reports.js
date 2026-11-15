@@ -2,6 +2,7 @@ import { html, raw, vnd, dmy, field, toast, download, $, monthLabel, openModal }
 import { api, apiUrl, D, S, save, today } from '../api.js';
 import { icon } from '../icons.js';
 import { GAS } from '../gas-code.js';
+import { backupCccd, restoreCccd, cccdItems } from '../cccd-backup.js';
 
 import { acts, forms, changes, rerender } from '../ui.js';
 
@@ -74,7 +75,7 @@ export function backupView() {
     ${sheetCard()}
     ${settingsCard()}
     ${cleanupCard()}
-    <section class="card" style="margin-top:12px"><h3>Ảnh CCCD</h3><p class="muted">Ảnh nằm trong kho Vercel Blob riêng tư, không nằm trong file JSON. Tải từng ảnh ở trang hồ sơ khách (nút "Tải về") khi cần bản dự phòng.</p></section>
+    ${cccdCard()}
     <section class="card" style="margin-top:12px"><h3>Kiểm tra tất cả kết nối</h3><p class="muted small" style="margin:6px 0">Thử đọc cơ sở dữ liệu, ghi/xóa một file thử trong kho ảnh và hỏi Google Sheet.</p><button class="btn primary sm" data-act="sys-check">Kiểm tra tất cả kết nối</button><div id="syscheck" style="margin-top:10px"></div></section>
     <h2 class="sec">Nhật ký thao tác gần đây</h2><div class="list" id="loglist">${logs.map((l) => html`<div class="li"><span><b>${l.action}</b> <span class="muted">${l.detail}</span></span><span class="muted small">${l.at.slice(0, 16).replace('T', ' ')}</span></div>`)}</div>
     <div class="row" style="margin-top:10px">${allLogs.length > logLimit ? html`<button class="btn" data-act="logs-more">Xem thêm (còn ${allLogs.length - logLimit} dòng)</button>` : ''}${logLimit > 10 ? html`<button class="btn" data-act="logs-less">Thu gọn (10 dòng mới nhất)</button>` : ''}</div>`;
@@ -86,7 +87,8 @@ forms.restore = async (f, fd) => {
   const s = $('#rsum'); s.hidden = false; s.textContent = `File có ${db.rooms.length} phòng, ${db.tenants.length} khách, ${db.invoices.length} hóa đơn, ${db.payments.length} giao dịch; lưu lúc ${db.updatedAt}.`;
   if (fd.get('confirm') !== 'GHI DE') throw new Error('Kiểm tra file xong. Gõ đúng "GHI DE" vào ô xác nhận rồi bấm lại để khôi phục.');
   if (!confirm('Chắc chắn GHI ĐÈ toàn bộ dữ liệu hiện tại bằng file này?')) return;
-  await save('POST', 'backup/restore', { db, confirm: 'GHI DE' }, 'Đã khôi phục dữ liệu'); rerender();
+  const j = await save('POST', 'backup/restore', { db, confirm: 'GHI DE' }, 'Đã khôi phục dữ liệu'); rerender();
+  const im = j.images || {}; if (im.checked) setTimeout(() => toast(`Ảnh căn cước: nối lại ${im.linked || 0} ảnh còn trong kho${im.kept ? `, ${im.kept} ảnh vẫn dùng được` : ''}${im.missing ? `, ${im.missing} ảnh không còn trong kho (dùng "Khôi phục ảnh căn cước từ file backup")` : ''}`, im.missing ? 'err' : undefined), 1500);
 };
 
 const mb = (b) => `${(b / 1048576).toFixed(1)} MB`;
@@ -170,4 +172,24 @@ acts['sys-check'] = async (el) => {
     const r = await api('POST', 'system/check', {});
     out.innerHTML = r.items.map((i) => `<div class="li"><span>${i.ok ? '✅' : '❌'} <b>${i.name}</b> <span class="muted small">${String(i.detail).replace(/[<>&]/g, '')}</span></span></div>`).join('') + `<p style="margin-top:10px;font-weight:600;color:var(${r.allOk ? '--green-t' : '--red-t'})">${r.summary}</p>`;
   } catch (e) { out.textContent = 'Không kiểm tra được: ' + e.message; } finally { el.disabled = false; }
+};
+
+// ---- Ảnh căn cước: backup .zip và khôi phục từ file backup ----
+function cccdCard() {
+  const n = cccdItems().length;
+  return html`<section class="card" style="margin-top:12px"><h3>${icon('card', '1.2em')} Ảnh căn cước (CCCD)</h3>
+    <p class="muted">Ảnh nằm trong kho Vercel Blob riêng tư, <b>không nằm trong file database.json</b>. Khi khôi phục từ file JSON, ảnh nào còn trong kho sẽ được <b>tự nối lại</b>. Nên bấm <b>Backup căn cước</b> cùng lúc với Tải database.json để có bản ảnh cất riêng.</p>
+    <div class="row"><button class="btn primary" data-act="cccd-backup" ${n ? '' : 'disabled'}>${icon('photo', '1.1em')} BACKUP CĂN CƯỚC (các phòng đang ở · ${n} ảnh)</button></div>
+    <p class="muted small" style="margin:8px 0 12px">Tải về 1 file .zip: mỗi phòng một thư mục, tên ảnh ghi rõ khách thuê / người ở cùng, mặt trước / mặt sau. Muốn lấy ảnh của một phòng: vào phòng đó → nút <b>Backup căn cước phòng này</b>. Giữ file ở nơi riêng tư.</p>
+    <form data-form="cccd-restore"><b>Khôi phục ảnh căn cước từ file backup (.zip)</b><input type="file" name="zip" accept=".zip,application/zip" required style="margin:8px 0">
+      <label class="cccd-ow"><input type="checkbox" name="overwrite"> <span>Thay cả ảnh đang có (mặc định: chỉ thêm ảnh còn thiếu)</span></label>
+      <div id="cccd-res" class="calc" hidden></div><div class="err-inline"></div><button class="btn block" type="submit">${icon('rotate', '1.1em')} KHÔI PHỤC ẢNH CĂN CƯỚC</button></form></section>`;
+}
+acts['cccd-backup'] = async (el) => { el.disabled = true; try { await backupCccd(); } finally { el.disabled = false; } };
+forms['cccd-restore'] = async (f, fd) => {
+  const file = fd.get('zip'); if (!file || !file.size) throw new Error('Chưa chọn file .zip');
+  const box = $('#cccd-res'); box.hidden = false; box.textContent = 'Đang đọc file và tải ảnh lên…';
+  const r = await restoreCccd(file, fd.get('overwrite') === 'on', (x) => { box.textContent = `Đang tải ảnh lên… ${x.done + x.skipped + x.failed}/${x.total}`; });
+  box.innerHTML = html`<b>Xong:</b> đã khôi phục <b>${r.done}</b> ảnh${r.skipped ? html`, giữ nguyên <b>${r.skipped}</b> ảnh đang có` : ''}${r.failed ? html`, <b class="owe">${r.failed}</b> ảnh lỗi (thử lại)` : ''}.${r.notFound.length ? html`<br>Không tìm thấy người trong dữ liệu hiện tại: ${r.notFound.join('; ')}` : ''}`.s;
+  toast(`Đã khôi phục ${r.done} ảnh căn cước`); if (r.done) setTimeout(rerender, 2500);
 };
