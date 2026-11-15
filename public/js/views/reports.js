@@ -3,6 +3,7 @@ import { api, apiUrl, D, S, save, today } from '../api.js';
 import { icon } from '../icons.js';
 import { GAS } from '../gas-code.js';
 import { backupCccd, restoreCccd, cccdItems } from '../cccd-backup.js';
+import { pushSupported, pushPerm, pushNeedsHomeScreen, subscribeThisDevice, unsubscribeThisDevice, thisDeviceOn, allowBadge } from '../badge.js';
 
 import { acts, forms, changes, rerender } from '../ui.js';
 
@@ -75,6 +76,7 @@ export function backupView() {
     ${sheetCard()}
     ${settingsCard()}
     ${cleanupCard()}
+    ${pushCard()}
     ${cccdCard()}
     <section class="card" style="margin-top:12px"><h3>Kiểm tra tất cả kết nối</h3><p class="muted small" style="margin:6px 0">Thử đọc cơ sở dữ liệu, ghi/xóa một file thử trong kho ảnh và hỏi Google Sheet.</p><button class="btn primary sm" data-act="sys-check">Kiểm tra tất cả kết nối</button><div id="syscheck" style="margin-top:10px"></div></section>
     <h2 class="sec">Nhật ký thao tác gần đây</h2><div class="list" id="loglist">${logs.map((l) => html`<div class="li"><span><b>${l.action}</b> <span class="muted">${l.detail}</span></span><span class="muted small">${l.at.slice(0, 16).replace('T', ' ')}</span></div>`)}</div>
@@ -193,3 +195,18 @@ forms['cccd-restore'] = async (f, fd) => {
   box.innerHTML = html`<b>Xong:</b> đã khôi phục <b>${r.done}</b> ảnh${r.skipped ? html`, giữ nguyên <b>${r.skipped}</b> ảnh đang có` : ''}${r.failed ? html`, <b class="owe">${r.failed}</b> ảnh lỗi (thử lại)` : ''}.${r.notFound.length ? html`<br>Không tìm thấy người trong dữ liệu hiện tại: ${r.notFound.join('; ')}` : ''}`.s;
   toast(`Đã khôi phục ${r.done} ảnh căn cước`); if (r.done) setTimeout(rerender, 2500);
 };
+
+// ---- Thông báo trên điện thoại (nhắc mỗi sáng + số trên icon) ----
+function pushCard() {
+  const st = S.snap.push || { devices: [] }; const devs = st.devices || [];
+  const why = !pushSupported() ? (pushNeedsHomeScreen() ? 'Trên iPhone/iPad: mở Safari → nút Chia sẻ → "Thêm vào Màn hình chính", rồi mở app bằng icon đó và vào lại trang này.' : 'Trình duyệt này không hỗ trợ thông báo đẩy.') : pushNeedsHomeScreen() ? 'Trên iPhone/iPad: phải mở app bằng icon ở màn hình chính (không mở bằng Safari) thì mới bật được.' : pushPerm() === 'denied' ? 'Máy này đã CHẶN thông báo. Vào Cài đặt của máy → Thông báo → Phòng Trọ 70 (hoặc cài đặt trang web của trình duyệt) để cho phép, rồi quay lại bấm Bật.' : '';
+  setTimeout(async () => { const el = $('#push-me'); if (el) el.innerHTML = (await thisDeviceOn()) ? html`<b class="okc">${icon('check', '1em')} Máy này ĐANG BẬT thông báo</b>`.s : html`<b class="owe">Máy này chưa bật thông báo</b>`.s; }, 0);
+  return html`<section class="card" style="margin-top:12px"><h3>${icon('bell', '1.2em')} Thông báo trên điện thoại</h3>
+    <p class="muted">Mỗi sáng khoảng <b>7:00 – 8:00</b>, nếu có việc cần xử lý, máy chủ gửi 1 thông báo (hiện cả trên màn hình khóa) và đặt <b>số trên icon app</b> bằng đúng số ở chuông. Thông báo chỉ ghi tên phòng và việc cần làm, không có họ tên hay số điện thoại khách.</p>
+    ${why ? html`<p class="warn-box">${why}</p>` : html`<p id="push-me" class="small">Đang kiểm tra máy này…</p>`}
+    <div class="row">${!why ? html`<button class="btn primary" data-act="push-on">${icon('bell', '1.1em')} Bật thông báo trên máy này</button><button class="btn" data-act="push-test" ${devs.length ? '' : 'disabled'}>Gửi thử thông báo</button><button class="btn danger" data-act="push-off">Tắt trên máy này</button>` : ''}</div>
+    <p class="small muted" style="margin:10px 0 0">Thiết bị đang nhận thông báo (${devs.length}): ${devs.length ? devs.map((d) => `${d.device} – bật ngày ${dmy(d.createdAt.slice(0, 10))}`).join('; ') : 'chưa có'}.${st.lastSent ? ` Lần gửi nhắc gần nhất: ${st.lastSent.slice(0, 16).replace('T', ' ')} (UTC).` : ''}</p></section>`;
+}
+acts['push-on'] = async (el) => { el.disabled = true; try { if (pushPerm() !== 'granted' && !(await allowBadge())) throw new Error('Chưa được cho phép thông báo trên máy này'); await subscribeThisDevice(); toast('Đã bật thông báo trên máy này'); rerender(); } catch (e) { toast(e.message, 'err'); } finally { el.disabled = false; } };
+acts['push-off'] = async (el) => { el.disabled = true; try { await unsubscribeThisDevice(); await api('GET', 'data'); toast('Đã tắt thông báo trên máy này'); rerender(); } catch (e) { toast(e.message, 'err'); } finally { el.disabled = false; } };
+acts['push-test'] = async (el) => { el.disabled = true; try { const j = await api('POST', 'push/test', {}); const r = j.result; toast(r.sent ? `Đã gửi thử tới ${r.sent} thiết bị${r.failed ? `, ${r.failed} thiết bị lỗi` : ''}. Xem thông báo trên điện thoại.` : `Gửi chưa được (${(r.errors || []).join(', ') || 'không rõ lỗi'}). Thử Tắt rồi Bật lại trên máy đó.`, r.sent ? undefined : 'err'); } catch (e) { toast(e.message, 'err'); } finally { el.disabled = false; } };

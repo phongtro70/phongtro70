@@ -1,3 +1,10 @@
+# Phiên bản 2026-12-02-a
+- **Thông báo đẩy về điện thoại mỗi sáng** (khoảng 7:00 – 8:00, do Vercel Cron gọi `/api/cron/push` một lần mỗi ngày): nếu có việc cần xử lý, máy chủ gửi 1 thông báo (hiện cả trên màn hình khóa, kể cả khi app đang đóng) và đặt **số trên icon app** bằng đúng số ở chuông. Nội dung chỉ có tên phòng và việc cần làm, không có họ tên / số điện thoại khách. Không có việc thì không gửi.
+- Bật: tab **Sao lưu** → thẻ **Thông báo trên điện thoại** → **Bật thông báo trên máy này** (hoặc nút **Bật thông báo & số trên icon** ở đầu trang) → **Cho phép**. Có nút **Gửi thử thông báo** và **Tắt trên máy này**. Bật được trên nhiều máy (tối đa 10).
+- iPhone / iPad: phải mở app bằng icon ở **màn hình chính** (iOS 16.4 trở lên) mới bật được.
+- **Không cần khai báo thêm biến nào**: khóa thông báo (VAPID) tự tạo và lưu trong dữ liệu. Tùy chọn: thêm biến `CRON_SECRET` trên Vercel để chỉ Vercel Cron gọi được lịch nhắc.
+- Khôi phục từ file JSON giữ nguyên cài đặt thông báo hiện tại (không phải bật lại).
+
 # Phiên bản 2026-12-01-c
 - **Số trên icon app luôn bằng số ở chuông bên trong** (thông báo phòng + cảnh báo điện nước + nhắc nợ riêng + số điện thoại tạm), kể cả khi app đang ở trang ngoài chưa đăng nhập.
 - Mở lại app từ nền (hoặc cứ 5 phút khi đang mở) thì số trên icon và chuông tự cập nhật, **không** làm trang tải lại và **không** gia hạn phiên đăng nhập (để yên 5 phút vẫn tự đăng xuất).

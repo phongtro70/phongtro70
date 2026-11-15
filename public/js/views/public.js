@@ -1,5 +1,5 @@
 import { html, raw, openModal, closeModal, vnd, dmy, monthLabel, weekday, esc, $, toast } from '../util.js';
-import { setBadge } from '../badge.js';
+import { setBadge, badgeButton } from '../badge.js';
 import { S, api, diagnose } from '../api.js';
 import { APP_VERSION } from '../version.js';
 import { lunarText } from '../lunar.js';
@@ -42,7 +42,7 @@ export function readingsBanner(rd) {
 export function dateBlock(today) { return html`<div class="pub-date">${weekday(today)}, ngày ${dmy(today)}</div><div class="pub-lunar">Âm lịch: ${lunarText(today)}</div>`; }
 
 export async function publicView(app) {
-  app.innerHTML = html`<header class="hero"><div class="hero-bar"><div id="a2hschip">${a2hsChip()}</div><div class="hero-right"><a class="bell zero" id="pubbell" href="#pubnotices" data-act="pub-bell" title="Thông báo cần xử lý">${icon('bell', '1.25em')}<span class="bn">0</span></a><a class="login-top" href="#/login"><span class="btn sm">${icon('login', '1.1em')} Đăng nhập</span></a></div></div><div class="hero-in"><h1>PHÒNG TRỌ 70 HOÀNG SÂM<span class="credit">BusCafe</span></h1><div id="ubar">${usageBar(null)}</div><div id="alerts"></div><div id="pubdate"></div></div></header>
+  app.innerHTML = html`<header class="hero"><div class="hero-bar"><div id="a2hschip">${a2hsChip()}${badgeButton()}</div><div class="hero-right"><a class="bell zero" id="pubbell" href="#pubnotices" data-act="pub-bell" title="Thông báo cần xử lý">${icon('bell', '1.25em')}<span class="bn">0</span></a><a class="login-top" href="#/login"><span class="btn sm">${icon('login', '1.1em')} Đăng nhập</span></a></div></div><div class="hero-in"><h1>PHÒNG TRỌ 70 HOÀNG SÂM<span class="credit">BusCafe</span></h1><div id="ubar">${usageBar(null)}</div><div id="alerts"></div><div id="pubdate"></div></div></header>
     <main class="wrap narrow"><div id="pubbanner"></div><div id="pubbody"><p class="boot">Đang tải thông báo…</p></div>
     <div id="pubcal" style="margin-top:20px"></div>
     <div id="a2hs">${a2hsButton()}</div>
@@ -57,7 +57,7 @@ function paint(res, note = '') {
   $('#pubbanner').innerHTML = eventBanner(res.events, res.today).s; $('#pubcal').innerHTML = calendarPanel().s;
   $('#pubdate').innerHTML = dateBlock(res.today).s; refreshStatus(res.system);
   const bn = $('#pubbell'); if (bn) { bn.querySelector('.bn').textContent = String(items.length); bn.classList.toggle('zero', !items.length); }
-  setBadge(items.length);
+  setBadge(res.badgeCount ?? items.length); // số trên icon app = số chuông bên trong
   body.innerHTML = html`<div class="sum-title sumrow" id="pubnotices"><span>TỔNG QUAN CẦN XỬ LÝ</span>${items.length ? '' : html`<span class="okpill">${icon('check', '1.1em')} Không có việc cần xử lý</span>`}</div>
     <div class="stats">
       <div class="stat wide rooms3"><div><b>${s.rooms}</b><span>Tổng số phòng</span></div><div><b>${s.rented}</b><span>Đang cho thuê</span></div><div><b>${s.closed}</b><span>Đang đóng</span></div></div>

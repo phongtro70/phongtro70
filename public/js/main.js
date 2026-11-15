@@ -1,5 +1,5 @@
 import { html, $, weekday, dmy, toast, closeModal } from './util.js';
-import { S, api, loadSession, loadData, setUnauthHandler, today, D, DV } from './api.js';
+import { S, api, apiUrl, loadSession, loadData, setUnauthHandler, today, D, DV } from './api.js';
 import { acts, go, initEvents, setRender } from './ui.js';
 import { lunarText } from './lunar.js';
 import { usageBar, alertsHtml, footStrip, refreshStatus } from './views/strip.js';
@@ -18,7 +18,7 @@ import { debtsView } from './views/debts.js';
 import { ledgerView } from './views/ledger.js';
 import { blockedDialog } from './views/room.js';
 import { ROOM_ICON } from './icons.js';
-import { setBadge, badgeButton, allowBadge } from './badge.js';
+import { setBadge, badgeButton, allowBadge, registerSW, subscribeThisDevice, pushPerm } from './badge.js';
 
 const app = () => $('#app');
 let timer = null;
@@ -61,7 +61,9 @@ async function render(opts = {}) {
   if (out.after) out.after();
   setBadge(notifCount());
   if (opts.keepScroll) window.scrollTo(0, y);
+  if (!autoSubTried && pushPerm() === 'granted') { autoSubTried = true; subscribeThisDevice().catch(() => {}); } // đã cho phép thông báo: tự đăng ký máy này (một lần mỗi lần mở)
 }
+let autoSubTried = false;
 window.addEventListener('sysstatus', () => refreshStatus(S.snap?.system || S.pub?.system, S.loggedIn));
 acts['retry-load'] = () => render();
 // Nút "Tải lại dữ liệu" (cạnh phải màn hình): lấy dữ liệu mới nhất khi máy/tab khác vừa nhập, giữ nguyên vị trí đang xem
@@ -73,7 +75,7 @@ acts['reload-data'] = async (el) => {
     toast(`Đã tải dữ liệu mới nhất (${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })})`);
   } catch (e) { toast(e.message, 'err'); } finally { reloading = false; el.classList.remove('spin'); }
 };
-acts['badge-allow'] = async () => { if (await allowBadge()) { toast('Đã bật số thông báo trên icon'); render({ keepScroll: true }); } else toast('Chưa được cho phép. Vào Cài đặt → Thông báo → Phòng Trọ 70 để bật.', 'err'); };
+acts['badge-allow'] = async () => { if (await allowBadge()) { toast(S.loggedIn ? 'Đã bật thông báo và số trên icon' : 'Đã cho phép. Đăng nhập để hoàn tất bật thông báo.'); if (S.loggedIn) { try { await loadData(); } catch { /* bỏ qua */ } } render({ keepScroll: true }); } else toast('Chưa được cho phép. Vào Cài đặt → Thông báo → Phòng Trọ 70 để bật.', 'err'); };
 acts.logout = async () => { try { sessionStorage.removeItem('pt70_tab'); } catch { /* bỏ qua */ } try { await api('POST', 'auth/logout', {}); } catch { /* bỏ qua */ } S.loggedIn = false; S.csrf = null; S.snap = null; go('#/'); toast('Đã đăng xuất'); };
 acts['open-room'] = (el) => { const r = S.snap?.db.rooms.find((x) => x.id === el.dataset.id); if (r && !r.kind && (r.status === 'repair' || r.status === 'notready')) { blockedDialog(r); return; } go(`#/room/${el.dataset.id}`); };
 setUnauthHandler(() => { S.snap = null; go('#/login'); toast('Phiên đăng nhập đã hết (5 phút không hoạt động). Vui lòng đăng nhập lại.', 'err'); });
@@ -82,7 +84,7 @@ let lastAct = Date.now(); ['pointerdown', 'keydown', 'touchstart', 'scroll', 'in
 setInterval(() => { if (S.loggedIn && Date.now() - lastAct < 270000) api('POST', 'auth/ping', {}).catch(() => {}); }, 60000);
 
 (async function boot() {
-  initEvents(); setRender(render);
+  initEvents(); setRender(render); registerSW();
   const fab = document.createElement('button'); fab.type = 'button'; fab.className = 'reload-fab'; fab.dataset.act = 'reload-data'; fab.title = 'Tải lại dữ liệu mới nhất';
   fab.innerHTML = `${String(icon('rotate', '1.15em'))}<span>Tải lại dữ liệu</span>`; document.body.appendChild(fab);
   try { await loadSession(); } catch { /* chưa đăng nhập */ }
@@ -91,5 +93,10 @@ setInterval(() => { if (S.loggedIn && Date.now() - lastAct < 270000) api('POST',
   if (S.loggedIn && !flag) { try { await api('POST', 'auth/logout', {}); } catch { /* bỏ qua */ } S.loggedIn = false; S.csrf = null; S.snap = null; }
   window.addEventListener('hashchange', () => { closeModal(); render(); }); // chuyển trang thì đóng hộp thoại đang mở
   document.addEventListener('visibilitychange', () => { if (!document.hidden && !S.loggedIn && !location.hash.includes('login')) loadPublic(); });
+  // Mở lại app (từ nền) hoặc mỗi 5 phút khi đang mở: lấy số thông báo mới nhất cho icon, KHÔNG vẽ lại trang (không làm mất chữ đang gõ)
+  // Dùng API công khai (chỉ trả về con số) nên KHÔNG gia hạn phiên đăng nhập: để yên 5 phút vẫn bị đăng xuất như cũ
+  const quietBadge = async () => { if (document.hidden || !S.loggedIn) return; try { const r = await fetch(apiUrl('public/reminders'), { credentials: 'omit' }); const j = await r.json(); if (typeof j.badgeCount !== 'number') return; setBadge(j.badgeCount); const bn = document.querySelector('.bell .bn'); if (bn) { bn.textContent = String(j.badgeCount); bn.parentElement.classList.toggle('zero', !j.badgeCount); } } catch { /* bỏ qua */ } };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) quietBadge(); });
+  setInterval(quietBadge, 300000);
   render();
 })();
