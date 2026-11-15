@@ -1,3 +1,8 @@
+# Phiên bản 2026-12-01-b
+- **Khôi phục từ file database.json tự nối lại ảnh căn cước**: ảnh CCCD nào của khách / người ở cùng **vẫn còn trong kho Vercel Blob** sẽ được gắn lại đúng người (kể cả ảnh chụp SAU lúc tải file JSON). Khôi phục xong có thông báo số ảnh đã nối lại / còn thiếu.
+- **Nút BACKUP CĂN CƯỚC** (tab **Sao lưu**): tải 1 file .zip chứa ảnh CCCD 2 mặt của khách và người ở cùng **các phòng đang ở**, mỗi phòng một thư mục, tên ảnh ghi rõ người và mặt trước/mặt sau, kèm file `danh-sach-cccd.json`. Trong trang phòng có nút **Backup căn cước phòng này** để lấy ảnh riêng một phòng.
+- **Khôi phục ảnh căn cước từ file backup (.zip)** (tab **Sao lưu**): chọn file .zip đã backup → ảnh tự gắn lại đúng người (theo mã người, hoặc theo số CCCD) và tải lên kho ảnh. Mặc định chỉ thêm ảnh còn thiếu; tick "Thay cả ảnh đang có" nếu muốn thay. Đọc được cả file .zip đã được nén lại bằng Windows/Mac.
+
 # Phiên bản 2026-12-01-a
 - **Thay đổi giá phòng**: hộp thoại hiện sẵn **Chỉ số điện ban đầu** và **Chỉ số nước ban đầu** của khách để sửa nếu lúc nhận phòng nhập nhầm. Chỉ sửa được khi khách **chưa có lần ghi điện nước nào** (sau đó ô bị khóa, kèm hướng dẫn). Chỉ sửa chỉ số mà giữ nguyên giá thì không tạo lịch sử đổi giá.
 - **Nút "Tải lại dữ liệu"** màu xanh tím dựng dọc ở **cạnh phải màn hình**: bấm để lấy dữ liệu mới nhất khi máy/tab khác vừa nhập; giữ nguyên trang và vị trí đang xem.
