@@ -1,3 +1,8 @@
+# Phiên bản 2026-12-01-c
+- **Số trên icon app luôn bằng số ở chuông bên trong** (thông báo phòng + cảnh báo điện nước + nhắc nợ riêng + số điện thoại tạm), kể cả khi app đang ở trang ngoài chưa đăng nhập.
+- Mở lại app từ nền (hoặc cứ 5 phút khi đang mở) thì số trên icon và chuông tự cập nhật, **không** làm trang tải lại và **không** gia hạn phiên đăng nhập (để yên 5 phút vẫn tự đăng xuất).
+- Nút **"Bật số thông báo trên icon"** có cả ở trang ngoài (trước khi đăng nhập).
+
 # Phiên bản 2026-12-01-b
 - **Khôi phục từ file database.json tự nối lại ảnh căn cước**: ảnh CCCD nào của khách / người ở cùng **vẫn còn trong kho Vercel Blob** sẽ được gắn lại đúng người (kể cả ảnh chụp SAU lúc tải file JSON). Khôi phục xong có thông báo số ảnh đã nối lại / còn thiếu.
 - **Nút BACKUP CĂN CƯỚC** (tab **Sao lưu**): tải 1 file .zip chứa ảnh CCCD 2 mặt của khách và người ở cùng **các phòng đang ở**, mỗi phòng một thư mục, tên ảnh ghi rõ người và mặt trước/mặt sau, kèm file `danh-sach-cccd.json`. Trong trang phòng có nút **Backup căn cước phòng này** để lấy ảnh riêng một phòng.
