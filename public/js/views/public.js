@@ -25,8 +25,8 @@ export function todoText(it) {
 }
 export function taskCard(it, { actions = false, tenantName = '', pub = false } = {}) {
   const [todo, note] = todoText(it); const payType = ['overdue', 'debt', 'unpaid', 'partial', 'ended_debt'].includes(it.type);
-  const btn = !actions ? '' : it.type === 'need_readings' && it.rentalId ? html`<button class="btn red" data-act="readings" data-id="${it.rentalId}">${icon('bolt', '1.1em')} Tính tiền</button>`
-    : payType && it.invoiceId ? html`<button class="btn green" data-act="pay" data-id="${it.invoiceId}">${icon('check', '1.1em')} Thanh toán</button>` : html`<button class="btn" data-act="open-room" data-id="${it.roomId}">Mở phòng</button>`;
+  const btn = !actions ? '' : it.type === 'need_readings' && it.rentalId ? html`<button class="btn red sm rbtn" data-act="readings" data-id="${it.rentalId}">${icon('bolt', '1.1em')} Tính tiền</button>`
+    : payType && it.invoiceId ? html`<button class="btn green sm rbtn" data-act="pay" data-id="${it.invoiceId}">${icon('check', '1.1em')} Thanh toán</button>` : html`<button class="btn sm rbtn" data-act="open-room" data-id="${it.roomId}">Mở phòng</button>`;
   const open = pub && it.roomId ? raw(`data-act="pub-room" data-id="${esc(it.roomId)}" data-name="${esc(it.roomName)}" data-pay="${payType ? 1 : 0}"`) : !pub ? raw(`data-act="open-room" data-id="${esc(it.roomId)}"`) : '';
   return html`<article class="note task ${LEVEL[it.level] || ''} link" ${open}>
     <div class="t-line"><b class="t-room">${it.roomName}</b>${tenantName ? html` – <span class="t-name">${tenantName}</span>` : ''} – Thanh toán: <b>${dmy(it.dueDate)}</b></div>

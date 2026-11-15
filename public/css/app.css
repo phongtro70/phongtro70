@@ -516,3 +516,22 @@ small{font-size:1rem}.cd small{font-size:inherit}
 .lockmark.spy{width:4.6rem;height:4.6rem;right:auto;left:42%;top:50%;bottom:auto;transform:translateY(-50%)}
 .owner-card .rbadge{background:#dbeafe!important;color:#1d4ed8!important}.owner-card .rbadge .ic{color:#1d4ed8!important}.owner-card .stx{color:#1d4ed8!important}
 .lockmark.spy{width:6.5rem;height:6.5rem;left:auto;right:-8px;top:50%;transform:translateY(-50%)}.lockmark.spy .ic{color:rgb(37 99 235 / 14%)!important}
+/* ===== v2026-12-03-c ===== */
+.room-card.st-blue,.room-card.st-sky{background:linear-gradient(135deg,#ecfdf3 0%,#ddfbd959 100%)}
+/* Chủ Nhà: nền vàng nhạt + hình người bí mật mờ */
+.owner-card{background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%)!important;border-color:#fcd34d!important}
+.owner-card .rbadge{background:#fef3c7!important;color:#b45309!important}.owner-card .rbadge .ic{color:#b45309!important}.owner-card .stx{color:#b45309!important}
+.lockmark.spy .ic{color:rgb(180 83 9 / 13%)!important}
+@media(prefers-color-scheme:dark){.owner-card{background:rgb(245 158 11 / 14%)!important}}
+/* Thẻ việc cần làm: chữ vừa phải, nút bằng nút ở "Các phòng" */
+.note.task .t-line{font-size:.9rem}.note.task .t-room{font-size:1rem}
+.note.task .t-todo{font-size:1.05rem;margin-top:6px}
+.note.task .t-note{font-size:.95rem;color:var(--red-t,#c62828)!important;font-weight:800}
+.note.task .nact .btn{font-size:inherit}
+/* Nút Zalo / Gọi nhỏ hơn */
+.zbtn,.cbtn{font-size:.92rem!important;padding:3px 12px 3px 3px!important;gap:6px!important}
+.zbtn .zi{width:24px!important;height:24px!important;font-size:.85rem!important}.cbtn .ci{width:24px!important;height:24px!important}
+/* Chi tiết phòng: nút ở trên, thông tin khách liệt kê rõ */
+.room-acts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.kv.rinfo dd b{font-size:1.05rem}.kv.rinfo a{font-weight:700}
+.btn.edit-date{margin-left:6px;padding:4px 12px;min-height:32px;border:2px solid var(--brand,#0a72e6);color:var(--brand,#0a72e6);background:#fff;font-weight:800}

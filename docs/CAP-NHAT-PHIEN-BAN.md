@@ -1,3 +1,10 @@
+# Phiên bản 2026-12-03-c
+- Nền phòng đang cho thuê / trống: `linear-gradient(135deg, #ecfdf3 0%, #ddfbd959 100%)`. Phòng Chủ Nhà: nền **vàng nhạt** (giữ hình người bí mật mờ).
+- Thẻ việc cần làm: chữ dòng đầu 0.9rem, dòng "Cần làm" vừa phải; phần "(còn n ngày / trễ n ngày / quá hạn…)" **đậm màu đỏ**; nút bằng cỡ nút ở "Các phòng".
+- Nút Zalo / Gọi nhỏ hơn.
+- Chi tiết phòng: các nút **Hồ sơ khách · Tải Ảnh Hồ Sơ Khách Theo Phòng · Backup căn cước phòng này · Xuất Hợp Đồng** lên trên cùng; bên dưới liệt kê rõ: Khách thuê (bấm số để gọi), Ngày vào ở + nút **Sửa ngày** có viền xanh, Số người ở, Kỳ tiếp theo đến hạn, Ghi chú về khách.
+- Thêm / sửa thông tin khách có ô **Ghi chú về khách** (hiện ở chi tiết phòng và hồ sơ khách).
+
 # Phiên bản 2026-12-03-b
 - Thẻ việc cần làm: "**Phòng 1 – Lê Văn Cường – Thanh toán: 05/11/2026**".
 - Nhập khách có ngày vào đã quá 1 tháng, 2 lựa chọn ghi rõ:
