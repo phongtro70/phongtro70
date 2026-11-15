@@ -30,9 +30,9 @@ function shell(active, inner) {
   const t = today();
   const nav = [['dashboard', 'Tổng quan', 'home'], ['tenants', 'Khách thuê', 'users'], ['reports', 'Báo Cáo Tiền Trọ', 'chart', 'Báo cáo'], ['debts', 'Nhắc Nợ (Riêng)', 'money', 'Nhắc nợ'], ['ledger', 'Thu Chi (Riêng)', 'card', 'Thu chi'], ['backup', 'Sao lưu', 'shield']];
   const ahead = eventsAhead(S.snap.db.events, t).slice(0, 4);
-  return html`<div class="top"><div class="in"><div class="tl"><h1>PHÒNG TRỌ 70 HOÀNG SÂM<span class="credit">BusCafe</span></h1><div id="ubar">${usageBar(S.snap.system)}</div><div id="alerts">${alertsHtml(S.snap.system)}</div>
+  return html`<div class="top"><div class="in"><div class="tl"><h1 class="apptitle"><span class="t1">PHÒNG TRỌ 70</span> <span class="t2">HOÀNG SÂM</span><span class="credit">BusCafe</span></h1><div id="ubar">${usageBar(S.snap.system)}</div><div id="alerts">${alertsHtml(S.snap.system)}</div>
     <div class="dt">${weekday(t)}, ${dmy(t)}<br>Âm lịch: ${lunarText(t)}</div>${ahead.length ? html`<div class="hdr-events">${ahead.map((u) => html`<span>${icon('star', '1em')} ${u.ev.name} – ${dmy(u.date).slice(0, 5)} (${u.left === 0 ? 'hôm nay' : `còn ${u.left} ngày`})</span>`)}</div>` : ''}</div>
-    <div class="tr">${a2hsChip()}${badgeButton()}<a class="bell ${n ? '' : 'zero'}" href="#/dashboard" title="Thông báo">${icon('bell', '1.25em')}<span class="bn">${n}</span></a><button class="btn sm" data-act="logout">Đăng xuất</button></div></div></div>
+    <div class="tr">${a2hsChip()}${badgeButton()}<a class="bell ${n ? '' : 'zero'}" href="#/dashboard" title="Thông báo">${icon('bell', '1.25em')}<span class="bn">${n}</span></a><button class="btn sm logout-btn" data-act="logout">Đăng xuất</button></div></div></div>
     <nav class="nav"><div class="in">${nav.map(([k, l, ic, sh]) => html`<a href="#/${k}" data-tab="${k}" class="${active === k ? 'on' : ''}" title="${l}">${icon(ic, '1.35em')}<span class="nl">${l}</span><span class="ns">${sh || l}</span></a>`)}</div></nav>
     <main class="wrap">${raw(eventBanner(S.snap.db.events, t))}${inner}
       <div id="a2hs">${a2hsButton()}</div>

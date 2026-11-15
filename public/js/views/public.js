@@ -29,8 +29,8 @@ export function taskCard(it, { actions = false, tenantName = '', pub = false } =
     : payType && it.invoiceId ? html`<button class="btn green sm rbtn" data-act="pay" data-id="${it.invoiceId}">${icon('check', '1.1em')} Thanh toán</button>` : html`<button class="btn sm rbtn" data-act="open-room" data-id="${it.roomId}">Mở phòng</button>`;
   const open = pub && it.roomId ? raw(`data-act="pub-room" data-id="${esc(it.roomId)}" data-name="${esc(it.roomName)}" data-pay="${payType ? 1 : 0}"`) : !pub ? raw(`data-act="open-room" data-id="${esc(it.roomId)}"`) : '';
   return html`<article class="note task ${LEVEL[it.level] || ''} link" ${open}>
-    <div class="t-line"><b class="t-room">${it.roomName}</b>${tenantName ? html` – <span class="t-name">${tenantName}</span>` : ''} – Thanh toán: <b>${dmy(it.dueDate)}</b></div>
-    <div class="t-todo">Cần làm: <b>${todo}</b>${note ? html` <span class="t-note">(${note})</span>` : ''}</div>${btn ? html`<div class="nact">${btn}</div>` : ''}</article>`;
+    <div class="t-line"><b class="t-room">${it.roomName}</b>${tenantName ? html` – <span class="t-name">${tenantName}</span>` : ''}</div>
+    <div class="t-todo">Cần làm: <b>${todo}</b> <span class="t-note">(${dmy(it.dueDate)}${note ? ` - ${note}` : ''})</span></div>${btn ? html`<div class="nact">${btn}</div>` : ''}</article>`;
 }
 export function noticeCard(it, { link = false, tenantName = '', actions = false, pub = false } = {}) {
   const per = it.period || it.periodLabel; const m$ = (n) => html`<span class="money">${vnd(n)}</span>`;
@@ -62,7 +62,7 @@ export function readingsBanner(rd) {
 export function dateBlock(today) { return html`<div class="pub-date">${weekday(today)}, ngày ${dmy(today)}</div><div class="pub-lunar">Âm lịch: ${lunarText(today)}</div>`; }
 
 export async function publicView(app) {
-  app.innerHTML = html`<header class="hero"><div class="hero-bar"><div id="a2hschip">${a2hsChip()}${badgeButton()}</div><div class="hero-right"><a class="bell zero" id="pubbell" href="#pubnotices" data-act="pub-bell" title="Thông báo cần xử lý">${icon('bell', '1.25em')}<span class="bn">0</span></a><a class="login-top" href="#/login"><span class="btn sm">${icon('login', '1.1em')} Đăng nhập</span></a></div></div><div class="hero-in"><h1>PHÒNG TRỌ 70 HOÀNG SÂM<span class="credit">BusCafe</span></h1><div id="ubar">${usageBar(null)}</div><div id="alerts"></div><div id="pubdate"></div></div></header>
+  app.innerHTML = html`<header class="hero"><div class="hero-bar"><div id="a2hschip">${a2hsChip()}${badgeButton()}</div><div class="hero-right"><a class="bell zero" id="pubbell" href="#pubnotices" data-act="pub-bell" title="Thông báo cần xử lý">${icon('bell', '1.25em')}<span class="bn">0</span></a><a class="login-top" href="#/login"><span class="btn sm">${icon('login', '1.1em')} Đăng nhập</span></a></div></div><div class="hero-in"><h1 class="apptitle"><span class="t1">PHÒNG TRỌ 70</span> <span class="t2">HOÀNG SÂM</span><span class="credit">BusCafe</span></h1><div id="ubar">${usageBar(null)}</div><div id="alerts"></div><div id="pubdate"></div></div></header>
     <main class="wrap narrow"><div id="pubbanner"></div><div id="pubbody"><p class="boot">Đang tải thông báo…</p></div>
     <div id="pubcal" style="margin-top:20px"></div>
     <div id="a2hs">${a2hsButton()}</div>
@@ -113,7 +113,7 @@ export async function loadPublic() {
 acts['reload-public'] = () => loadPublic();
 
 export function loginView(app) {
-  app.innerHTML = html`<main class="login"><h1>PHÒNG TRỌ 70 HOÀNG SÂM<span class="credit">BusCafe</span></h1>
+  app.innerHTML = html`<main class="login"><h1 class="apptitle"><span class="t1">PHÒNG TRỌ 70</span> <span class="t2">HOÀNG SÂM</span><span class="credit">BusCafe</span></h1>
     <form data-form="login" autocomplete="on"><input type="password" name="password" placeholder="Nhập mật khẩu" autocomplete="current-password" required autofocus aria-label="Mật khẩu">
     <div class="msg err-inline" role="alert"></div><button class="btn primary block" type="submit">ĐĂNG NHẬP</button>
     <a href="#/" class="muted small">← Xem thông báo</a></form></main>`.s;

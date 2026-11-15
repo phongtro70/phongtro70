@@ -1,3 +1,10 @@
+# Phiên bản 2026-12-03-d
+- **Danh sách sự kiện cần nhớ** hiện **trước** lịch tháng (điện thoại, iPad dọc); máy tính vẫn ở cột bên phải.
+- Thẻ việc cần làm gọn hơn: dòng 1 "**Phòng 3 – VÕ TUẤN KIỆT**", dòng 2 "**Cần làm: Ghi điện nước tháng 11/2026 (20/11/2026 - còn 5 ngày)**" (phần trong ngoặc đậm màu đỏ).
+- Nút **Đăng xuất** màu đỏ.
+- Tên app hiện 2 dòng: **PHÒNG TRỌ 70** / **HOÀNG SÂM**.
+- Đầu lịch tháng: "**ÂM: (Tháng 9 - 10) Bính Ngọ**" cho gọn, không tràn chữ; ô Tháng và Năm nằm cùng 1 hàng.
+
 # Phiên bản 2026-12-03-c
 - Nền phòng đang cho thuê / trống: `linear-gradient(135deg, #ecfdf3 0%, #ddfbd959 100%)`. Phòng Chủ Nhà: nền **vàng nhạt** (giữ hình người bí mật mờ).
 - Thẻ việc cần làm: chữ dòng đầu 0.9rem, dòng "Cần làm" vừa phải; phần "(còn n ngày / trễ n ngày / quá hạn…)" **đậm màu đỏ**; nút bằng cỡ nút ở "Các phòng".
