@@ -156,7 +156,7 @@ t('chu trình thông báo: kỳ đầu (chưa ghi điện nước) chưa tính l
   const { db, rental } = setup('2026-11-10', '2026-11-10');
   assert.equal(buildReminders(db, '2026-11-10').length, 0, 'vào ở 10/11, chưa nhập điện nước: chưa có nợ, chưa có thông báo');
   assert.equal(buildReminders(db, '2026-11-25').length, 0, 'giữa tháng vẫn chưa tính là nợ (kể cả khi chưa nhận tiền phòng đầu kỳ)'); assert.equal(buildSummary(db, buildReminders(db, '2026-11-25')).totalRemaining, 0, 'tổng cần thu = 0 vì chưa tới kỳ ghi điện nước');
-  assert.equal(buildReminders(db, '2026-12-05')[0].type, 'upcoming'); assert.equal(buildReminders(db, '2026-12-10')[0].type, 'need_readings');
+  assert.equal(buildReminders(db, '2026-12-02').length, 0); assert.equal(buildReminders(db, '2026-12-05')[0].type, 'need_readings'); assert.equal(buildReminders(db, '2026-12-05')[0].daysLeft, 5); assert.equal(buildReminders(db, '2026-12-10')[0].type, 'need_readings');
   B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 1, elecNew: 120, waterNew: 11 }, '2026-12-10');
   const un = buildReminders(db, '2026-12-10')[0]; assert.equal(un.type, 'overdue', 'tiền phòng kỳ đầu chưa nhận, nay đã ghi điện nước kỳ sau → phát sinh nợ, đã quá hạn từ 11/11'); assert.equal(un.months.length, 2); assert.ok(buildSummary(db, buildReminders(db, '2026-12-10')).totalRemaining > 0, 'đã ghi điện nước → mới phát sinh nợ');
   B.addPayment(db, { invoiceId: db.invoices[0].id, amount: B.monthStates(db, rental.chainId)[0].outstanding }, '2026-12-10'); assert.equal(buildReminders(db, '2026-12-10')[0].type, 'unpaid', 'đã trả tháng 11: còn tháng 12 chưa trả, chưa tới hạn → Chưa thanh toán');
@@ -496,7 +496,7 @@ t('số điện thoại tạm: 6 chữ số giống nhau liên tiếp thì nhắ
 });
 t('số việc cần làm: một cách tính chung; "sắp đến hạn" không tính; làm xong hết thì về 0', () => {
   const { db, rental, inv0 } = setup('2026-11-10', '2026-11-10', { paidAlready: true, tenant: { ...person, phone: '0111111111' } });
-  assert.equal(taskBreakdown(db, '2026-12-06').rooms, 0); assert.equal(buildReminders(db, '2026-12-06')[0].type, 'upcoming'); // sắp đến hạn: chỉ nhắc, không tính
+  assert.equal(taskBreakdown(db, '2026-12-02').total, 1); assert.equal(taskBreakdown(db, '2026-12-03').readings, 1); // trước 7 ngày: nhắc ghi điện nước = 1 việc (số ĐT tạm = 1 việc)
   db.debts.push({ id: 'd1', name: 'Anh Ba', amount: 100000, date: '2026-11-01', payments: [] });
   const inv1 = B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 1, elecNew: 110, waterNew: 11 }, '2026-12-10');
   let tb = taskBreakdown(db, '2026-12-11'); assert.deepEqual([tb.rooms, tb.debts, tb.phones], [1, 1, 1]); assert.equal(badgeCount(db, '2026-12-11'), 3);
@@ -505,6 +505,17 @@ t('số việc cần làm: một cách tính chung; "sắp đến hạn" không 
   db.debts[0].payments.push({ id: 'p1', amount: 100000, date: '2026-12-11' });
   P.confirmPhone(db, { kind: 'tenant', id: db.tenants[0].id, field: 'phone' });
   assert.equal(badgeCount(db, '2026-12-11'), 0); assert.equal(publicReminders(db, '2026-12-11').badgeCount, 0);
+});
+t('trước hạn 7 ngày: 1 việc "ghi điện nước" (gộp "sắp đến ngày thu tiền"); ghi xong → 1 việc "thu tiền"; thu xong → 0', () => {
+  const { db, rental } = setup('2026-11-10', '2026-11-10', { paidAlready: true });
+  assert.equal(taskBreakdown(db, '2026-12-02').total, 0);                                     // còn 8 ngày: chưa báo
+  let tb = taskBreakdown(db, '2026-12-03'); assert.deepEqual([tb.readings, tb.rooms, tb.total], [1, 0, 1]); // còn 7 ngày
+  tb = taskBreakdown(db, '2026-12-12'); assert.deepEqual([tb.readings, tb.rooms, tb.total], [1, 0, 1]);   // trễ vẫn là 1 việc
+  const r = buildReminders(db, '2026-12-12')[0]; assert.equal(r.type, 'need_readings'); assert.match(r.label, /trễ 2 ngày/);
+  const inv = B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 1, elecNew: 110, waterNew: 11 }, '2026-12-05');
+  tb = taskBreakdown(db, '2026-12-05'); assert.deepEqual([tb.readings, tb.rooms, tb.total], [0, 1, 1]);   // ghi xong: cần thu tiền
+  B.addPayment(db, { invoiceId: inv.id, amount: B.remainingOf(db, inv), date: '2026-12-05', allMonths: true }, '2026-12-05');
+  assert.equal(taskBreakdown(db, '2026-12-05').total, 0);
 });
 console.log(`\nKết quả: ${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);
