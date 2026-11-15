@@ -1,3 +1,6 @@
+# Phiên bản 2026-12-03-e
+- **Trang ngoài (chưa đăng nhập) giống trang quản lý**: cùng đầu trang (tên app 2 dòng, ngày dương / âm, sự kiện sắp tới, chuông, nút Đăng nhập), cùng thứ tự (Việc cần xử lý → Nhắc nợ → Sự kiện → Tổng quan → Nhắc ghi điện nước → Các phòng → Lịch → Điện nước), cùng màu thẻ phòng (xanh lá sáng + ổ khóa mở, phòng khóa xám), cùng cỡ chữ. Trang ngoài vẫn không có nút thao tác và không hiện thông tin riêng của khách (SĐT, CCCD, địa chỉ).
+
 # Phiên bản 2026-12-03-d
 - **Danh sách sự kiện cần nhớ** hiện **trước** lịch tháng (điện thoại, iPad dọc); máy tính vẫn ở cột bên phải.
 - Thẻ việc cần làm gọn hơn: dòng 1 "**Phòng 3 – VÕ TUẤN KIỆT**", dòng 2 "**Cần làm: Ghi điện nước tháng 11/2026 (20/11/2026 - còn 5 ngày)**" (phần trong ngoặc đậm màu đỏ).

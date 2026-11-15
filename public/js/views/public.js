@@ -8,7 +8,7 @@ import { usageBar, alertsHtml, footStrip, refreshStatus } from './strip.js';
 import { a2hsButton, a2hsChip } from '../a2hs.js';
 import { usagePanel } from './usage.js';
 import { debtNotices } from './debts.js';
-import { calendarPanel, eventBanner, eventsAheadList } from './calendar.js';
+import { calendarPanel, eventBanner, eventsAheadList, eventsAhead } from './calendar.js';
 import { icon, ROOM_ICON, ROOM_TONE } from '../icons.js';
 import { ROOM_STATUS } from '../util.js';
 
@@ -51,20 +51,23 @@ export function noticeCard(it, { link = false, tenantName = '', actions = false,
 
 function rosterCard(r) {
   const tone = ROOM_TONE[r.status];
-  return html`<article class="card click room-card st-${tone}" data-act="pub-room" data-id="${r.roomId}" data-name="${r.roomName}">${r.status === 'notready' ? html`<span class="lockmark">${icon('lock', '100%')}</span>` : ['occupied', 'empty'].includes(r.status) ? html`<span class="lockmark open">${icon('unlock', '100%')}</span>` : ''}<div class="rhead"><span class="rbadge ${tone}">${raw(icon(ROOM_ICON[r.status], '1.6em'))}</span><div class="sp"><h3>${r.roomName}</h3><span class="stx ${tone}">${ROOM_STATUS[r.status]}</span></div></div>
-    ${r.startDate ? html`<dl class="kv"><dt>Ngày vào</dt><dd>${dmy(r.startDate)}</dd>${r.tenantName !== undefined ? html`<dt>Khách</dt><dd class="big">${r.tenantName}</dd>` : ''}<dt>Số người</dt><dd>${r.people}</dd><dt>Nợ</dt><dd class="${r.debt ? 'owe' : 'okc'}">${vnd(r.debt)}</dd>${r.note ? html`<dt>Ghi chú</dt><dd>${r.note}</dd>` : ''}</dl>` : ''}</article>`;
+  return html`<article class="card click room-card st-${tone}" data-act="pub-room" data-id="${r.roomId}" data-name="${r.roomName}">${r.status === 'notready' ? html`<span class="lockmark">${icon('lock', '100%')}</span>` : ['occupied', 'empty'].includes(r.status) ? html`<span class="lockmark open">${icon('unlock', '100%')}</span>` : ''}<div class="rhead"><span class="rbadge ${tone}">${raw(icon(ROOM_ICON[r.status], '1.6em'))}</span><div class="sp"><h3>${r.roomName}</h3><span class="stx ${tone}">${ROOM_STATUS[r.status]}${r.startDate ? html` <span class="room-sub">· Vào ${dmy(r.startDate)}</span>` : ''}</span></div></div>
+    ${r.startDate ? html`<dl class="kv">${r.tenantName !== undefined ? html`<dt>Khách thuê</dt><dd class="big">${r.tenantName}</dd>` : ''}<dt>Số người</dt><dd>${r.people}</dd><dt>Còn nợ</dt><dd class="${r.debt ? 'owe' : 'okc'}">${vnd(r.debt)}</dd>${r.note ? html`<dt>Ghi chú</dt><dd>${r.note}</dd>` : ''}</dl>` : r.note && r.status !== 'empty' ? html`<p class="muted" style="margin:6px 0 0">${r.note}</p>` : ''}</article>`;
 }
 // Nhắc ghi điện nước: phòng đã tới/qua ngày ghi và phòng sắp tới ngày ghi (tính theo ngày nhận phòng của từng khách)
 export function readingsBanner(rd) {
   const due = rd?.due || [], soon = rd?.soon || []; if (!due.length && !soon.length) return html``;
   return html`<div class="rdnote"><b>${icon('bolt', '1.15em')} Nhắc ghi điện nước</b>${due.length ? html`<div class="rdline due"><span>Đã tới ngày ghi:</span>${due.map((x) => html`<span class="rdchip">${x.roomName} <small>· ${x.daysLate ? `trễ ${x.daysLate} ngày` : 'hôm nay'} (${dmy(x.dueDate)})</small></span>`)}</div>` : ''}${soon.length ? html`<div class="rdline soon"><span>Sắp tới ngày ghi:</span>${soon.map((x) => html`<span class="rdchip">${x.roomName} <small>· còn ${x.daysLeft} ngày (${dmy(x.dueDate)})</small></span>`)}</div>` : ''}</div>`;
 }
-export function dateBlock(today) { return html`<div class="pub-date">${weekday(today)}, ngày ${dmy(today)}</div><div class="pub-lunar">Âm lịch: ${lunarText(today)}</div>`; }
+export function dateBlock(today, events) {
+  const ahead = eventsAhead(events || [], today).slice(0, 4);
+  return html`<div class="dt">${weekday(today)}, ${dmy(today)}<br>Âm lịch: ${lunarText(today)}</div>${ahead.length ? html`<div class="hdr-events">${ahead.map((u) => html`<span>${icon('star', '1em')} ${u.ev.name} – ${dmy(u.date).slice(0, 5)} (${u.left === 0 ? 'hôm nay' : `còn ${u.left} ngày`})</span>`)}</div>` : ''}`;
+}
 
 export async function publicView(app) {
-  app.innerHTML = html`<header class="hero"><div class="hero-bar"><div id="a2hschip">${a2hsChip()}${badgeButton()}</div><div class="hero-right"><a class="bell zero" id="pubbell" href="#pubnotices" data-act="pub-bell" title="Thông báo cần xử lý">${icon('bell', '1.25em')}<span class="bn">0</span></a><a class="login-top" href="#/login"><span class="btn sm">${icon('login', '1.1em')} Đăng nhập</span></a></div></div><div class="hero-in"><h1 class="apptitle"><span class="t1">PHÒNG TRỌ 70</span> <span class="t2">HOÀNG SÂM</span><span class="credit">BusCafe</span></h1><div id="ubar">${usageBar(null)}</div><div id="alerts"></div><div id="pubdate"></div></div></header>
-    <main class="wrap narrow"><div id="pubbanner"></div><div id="pubbody"><p class="boot">Đang tải thông báo…</p></div>
-    <div id="pubcal" style="margin-top:20px"></div>
+  app.innerHTML = html`<div class="top pubtop"><div class="in"><div class="tl"><h1 class="apptitle"><span class="t1">PHÒNG TRỌ 70</span> <span class="t2">HOÀNG SÂM</span><span class="credit">BusCafe</span></h1><div id="ubar">${usageBar(null)}</div><div id="alerts"></div><div id="pubdate"></div></div>
+    <div class="tr"><span id="a2hschip">${a2hsChip()}${badgeButton()}</span><a class="bell zero" id="pubbell" href="#pubnotices" data-act="pub-bell" title="Việc cần xử lý">${icon('bell', '1.25em')}<span class="bn">0</span></a><a class="btn sm primary login-btn" href="#/login">${icon('login', '1.1em')} Đăng nhập</a></div></div></div>
+    <main class="wrap"><div id="pubbanner"></div><div id="pubbody"><p class="boot">Đang tải thông báo…</p></div>
     <div id="a2hs">${a2hsButton()}</div>
     <footer class="page-foot"><div id="footstrip"></div><div class="upd" id="upd"></div><div class="upd">Phiên bản giao diện: ${APP_VERSION}</div></footer></main>`.s;
   await loadPublic();
@@ -74,25 +77,26 @@ const readCache = () => { try { return JSON.parse(localStorage.getItem(CACHE)); 
 function paint(res, note = '') {
   const body = $('#pubbody'); if (!body) return;
   S.pub = res; const s = res.summary, items = res.items;
-  $('#pubbanner').innerHTML = eventBanner(res.events, res.today).s; $('#pubcal').innerHTML = calendarPanel().s;
-  $('#pubdate').innerHTML = dateBlock(res.today).s; refreshStatus(res.system);
+  $('#pubbanner').innerHTML = eventBanner(res.events, res.today).s;
+  $('#pubdate').innerHTML = dateBlock(res.today, res.events).s; refreshStatus(res.system);
   const cnt = res.badgeCount ?? items.filter((x) => x.type !== 'upcoming').length; // MỘT con số chung: chuông ngoài = chuông trong = icon app
   const bn = $('#pubbell'); if (bn) { bn.querySelector('.bn').textContent = String(cnt); bn.classList.toggle('zero', !cnt); }
   setBadge(cnt);
-  body.innerHTML = html`<div class="sum-title sumrow" id="pubnotices"><span>TỔNG QUAN CẦN XỬ LÝ</span>${cnt ? '' : html`<span class="okpill">${icon('check', '1.1em')} Không có việc cần xử lý</span>`}</div>
-    <div class="stats">
-      <div class="stat wide rooms3"><div><b>${s.rooms}</b><span>Tổng số phòng</span></div><div><b>${s.rented}</b><span>Đang cho thuê</span></div><div><b>${s.closed}</b><span>Đang đóng</span></div></div>
-      <div class="stat ${s.needReadings ? 'orange' : ''}"><b>${s.needReadings}</b><span>phòng cần ghi điện nước</span></div>
-      <div class="stat redtxt"><b>${s.unpaidRooms}</b><span>phòng chưa thanh toán đủ</span></div>
-      <div class="stat wide redtxt"><b>${vnd(s.totalRemaining)}</b><span>tổng tiền còn cần thu</span></div>
-    </div>
-    ${items.some((i) => i.type !== 'upcoming') ? html`<div class="notices tasks">${items.filter((i) => i.type !== 'upcoming').map((i) => taskCard(i, { pub: true, tenantName: i.tenantName || '' }))}</div>` : ''}${items.some((i) => i.type === 'upcoming') ? html`<div class="sum-title" style="margin-top:14px">SẮP ĐẾN NGÀY THU TIỀN <span class="muted small">(chỉ nhắc trước)</span></div><div class="notices">${items.filter((i) => i.type === 'upcoming').map((i) => noticeCard(i, { pub: true }))}</div>` : ''}
+  // Cùng thứ tự, cùng kiểu chữ / màu với trang quản lý (Tổng quan)
+  const tk = res.tasks || { total: cnt }; const tasks = items.filter((i) => i.type !== 'upcoming');
+  const sum = [tk.readings ? `Ghi điện nước: <b>${tk.readings}</b>` : '', tk.rooms ? `Thu tiền phòng: <b>${tk.rooms}</b>` : '', tk.debts ? `Nhắc nợ riêng: <b>${tk.debts}</b>` : '', tk.phones ? `Số điện thoại: <b>${tk.phones}</b>` : '', tk.leaks ? `Cảnh báo điện nước: <b>${tk.leaks}</b>` : ''].filter(Boolean);
+  body.innerHTML = html`<h2 class="sec sumrow" id="pubnotices" style="margin-top:4px"><span>Việc cần xử lý (${cnt})</span>${cnt ? '' : html`<span class="okpill">${icon('check', '1.1em')} Đã xử lý hết – không có việc cần làm</span>`}</h2>
+    ${sum.length ? html`<p class="task-sum">${raw(sum.join(' · '))}</p>` : ''}
+    ${tasks.length ? html`<div class="notices tasks" style="margin-top:0">${tasks.map((i) => taskCard(i, { pub: true, tenantName: i.tenantName || '' }))}</div>` : ''}
     ${debtNotices(res.debts?.items.map((d) => ({ ...d })) || [], { actions: false })}
     ${eventsAheadList(res.events, res.today)}
-    ${usagePanel(res.usage)}
+    <h2 class="sec">Tổng quan</h2>
+    <div class="cards7"><div class="stat roomstat"><b>${s.rooms}</b><span>Tổng số phòng</span><span class="sub blk">Phòng đang khóa: <b class="inl">${(res.roster || []).filter((r) => r.status === 'notready').length}</b></span></div><div class="stat redtxt"><b>${s.unpaidRooms}</b><span>Phòng cần thu tiền</span></div><div class="stat debt"><b>${vnd(s.totalRemaining)}</b><span>Tổng công nợ</span></div></div>
     ${readingsBanner(res.readings)}
-    <div class="sum-title" style="margin-top:18px">DANH SÁCH PHÒNG</div>
-    <div class="notices" style="margin-top:0">${(res.roster || []).map(rosterCard)}</div>`.s;
+    <div class="section-head"><h2 class="sec">Các phòng</h2></div>
+    <div class="grid">${(res.roster || []).map(rosterCard)}</div>
+    <div class="dash-cal">${calendarPanel()}</div>
+    ${usagePanel(res.usage)}`.s;
   const u = $('#upd'); if (u) u.textContent = note || `Cập nhật lúc ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
 }
 export async function loadPublic() {
