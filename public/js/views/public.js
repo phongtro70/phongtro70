@@ -56,16 +56,17 @@ function paint(res, note = '') {
   S.pub = res; const s = res.summary, items = res.items;
   $('#pubbanner').innerHTML = eventBanner(res.events, res.today).s; $('#pubcal').innerHTML = calendarPanel().s;
   $('#pubdate').innerHTML = dateBlock(res.today).s; refreshStatus(res.system);
-  const bn = $('#pubbell'); if (bn) { bn.querySelector('.bn').textContent = String(items.length); bn.classList.toggle('zero', !items.length); }
-  setBadge(res.badgeCount ?? items.length); // số trên icon app = số chuông bên trong
-  body.innerHTML = html`<div class="sum-title sumrow" id="pubnotices"><span>TỔNG QUAN CẦN XỬ LÝ</span>${items.length ? '' : html`<span class="okpill">${icon('check', '1.1em')} Không có việc cần xử lý</span>`}</div>
+  const cnt = res.badgeCount ?? items.filter((x) => x.type !== 'upcoming').length; // MỘT con số chung: chuông ngoài = chuông trong = icon app
+  const bn = $('#pubbell'); if (bn) { bn.querySelector('.bn').textContent = String(cnt); bn.classList.toggle('zero', !cnt); }
+  setBadge(cnt);
+  body.innerHTML = html`<div class="sum-title sumrow" id="pubnotices"><span>TỔNG QUAN CẦN XỬ LÝ</span>${cnt ? '' : html`<span class="okpill">${icon('check', '1.1em')} Không có việc cần xử lý</span>`}</div>
     <div class="stats">
       <div class="stat wide rooms3"><div><b>${s.rooms}</b><span>Tổng số phòng</span></div><div><b>${s.rented}</b><span>Đang cho thuê</span></div><div><b>${s.closed}</b><span>Đang đóng</span></div></div>
       <div class="stat ${s.needReadings ? 'orange' : ''}"><b>${s.needReadings}</b><span>phòng cần ghi điện nước</span></div>
       <div class="stat redtxt"><b>${s.unpaidRooms}</b><span>phòng chưa thanh toán đủ</span></div>
       <div class="stat wide redtxt"><b>${vnd(s.totalRemaining)}</b><span>tổng tiền còn cần thu</span></div>
     </div>
-    ${items.length ? html`<div class="notices">${items.map((i) => noticeCard(i, { pub: true }))}</div>` : ''}
+    ${items.some((i) => i.type !== 'upcoming') ? html`<div class="notices">${items.filter((i) => i.type !== 'upcoming').map((i) => noticeCard(i, { pub: true }))}</div>` : ''}${items.some((i) => i.type === 'upcoming') ? html`<div class="sum-title" style="margin-top:14px">SẮP ĐẾN NGÀY THU TIỀN <span class="muted small">(chỉ nhắc trước)</span></div><div class="notices">${items.filter((i) => i.type === 'upcoming').map((i) => noticeCard(i, { pub: true }))}</div>` : ''}
     ${debtNotices(res.debts?.items.map((d) => ({ ...d })) || [], { actions: false })}
     ${eventsAheadList(res.events, res.today)}
     ${usagePanel(res.usage)}

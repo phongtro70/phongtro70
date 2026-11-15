@@ -1,3 +1,10 @@
+# Phiên bản 2026-12-02-b
+- **Một con số chung cho mọi nơi**: chuông bên trong, chuông trang ngoài, số trên icon app và thông báo mỗi sáng đều lấy cùng một cách tính ở máy chủ = **số việc cần làm**:
+  phòng cần xử lý (quá hạn, còn nợ, chưa thanh toán / thanh toán một phần, chưa ghi điện nước, nợ sau trả phòng, cần hoàn tiền) + khoản **Nhắc nợ riêng** còn mở (cần thu và cần trả) + **số điện thoại tạm** + **cảnh báo điện nước** chưa kiểm tra.
+- **"Sắp đến ngày thu tiền" không tính** vào số nữa (chỉ là nhắc trước, chưa có việc phải làm); hiện riêng ở mục "Sắp đến ngày thu tiền".
+- Tổng quan ghi rõ **Việc cần xử lý (N)** kèm chi tiết từng loại (Phòng · Nhắc nợ riêng · Số điện thoại · Cảnh báo điện nước). **Làm xong hết việc thì số về 0, chuông hết số, icon app hết số.**
+- Cảnh báo điện nước tăng bất thường có nút **"Đã kiểm tra"** để không còn tính là việc cần làm (tháng sau vẫn tăng thì có cảnh báo mới).
+
 # Phiên bản 2026-12-02-a
 - **Thông báo đẩy về điện thoại mỗi sáng** (khoảng 7:00 – 8:00, do Vercel Cron gọi `/api/cron/push` một lần mỗi ngày): nếu có việc cần xử lý, máy chủ gửi 1 thông báo (hiện cả trên màn hình khóa, kể cả khi app đang đóng) và đặt **số trên icon app** bằng đúng số ở chuông. Nội dung chỉ có tên phòng và việc cần làm, không có họ tên / số điện thoại khách. Không có việc thì không gửi.
 - Bật: tab **Sao lưu** → thẻ **Thông báo trên điện thoại** → **Bật thông báo trên máy này** (hoặc nút **Bật thông báo & số trên icon** ở đầu trang) → **Cho phép**. Có nút **Gửi thử thông báo** và **Tắt trên máy này**. Bật được trên nhiều máy (tối đa 10).

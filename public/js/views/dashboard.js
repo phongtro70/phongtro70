@@ -13,7 +13,7 @@ export function roomMoney(roomId) {
   return { r, inv, d: invD(inv.id) };
 }
 export function dashboardView() {
-  const rooms = D().rooms.filter((r) => !r.kind), rem = DV().reminders; const ownerRoom = D().rooms.find((r) => r.kind === 'owner');
+  const rooms = D().rooms.filter((r) => !r.kind), rem = DV().reminders, tk = DV().tasks || { total: 0 }; const remTasks = rem.filter((i) => i.type !== 'upcoming'), remSoon = rem.filter((i) => i.type === 'upcoming'); const ownerRoom = D().rooms.find((r) => r.kind === 'owner');
   let debt = 0, toCollect = 0;
   for (const c of new Set(D().rentals.map((r) => r.chainId))) {
     const inv = latestInvOf(c); const d = invD(inv.id); const rent = D().rentals.filter((r) => r.chainId === c).slice(-1)[0]; debt += d.remaining;
@@ -23,10 +23,12 @@ export function dashboardView() {
   }
   const stat = (n, l, cls = '') => html`<div class="stat ${cls}"><b>${n}</b><span>${l}</span></div>`;
   return html`
-    <h2 class="sec sumrow" style="margin-top:4px"><span>Thông báo cần xử lý (${rem.length})</span>${rem.length ? '' : html`<span class="okpill">${icon('check', '1.1em')} Không có việc cần xử lý</span>`}</h2>
-    ${rem.length ? html`<div class="notices" style="margin-top:0">${rem.map((i) => noticeCard({ ...i, period: i.periodLabel }, { link: true, actions: true, tenantName: i.tenantId ? tenant(i.tenantId)?.fullName : '' }))}</div>` : ''}
+    <h2 class="sec sumrow" style="margin-top:4px"><span>Việc cần xử lý (${tk.total})</span>${tk.total ? '' : html`<span class="okpill">${icon('check', '1.1em')} Đã xử lý hết – không có việc cần làm</span>`}</h2>
+    ${tk.total ? html`<p class="task-sum">${[tk.rooms ? `Phòng: <b>${tk.rooms}</b>` : '', tk.debts ? `Nhắc nợ riêng: <b>${tk.debts}</b>` : '', tk.phones ? `Số điện thoại: <b>${tk.phones}</b>` : '', tk.leaks ? `Cảnh báo điện nước: <b>${tk.leaks}</b> <a href="#usage-panel" data-act="goto-usage">(xem)</a>` : ''].filter(Boolean).map((x) => raw(x)).reduce((a, x, i) => [...a, i ? ' · ' : '', x], [])}</p>` : ''}
+    ${remTasks.length ? html`<div class="notices" style="margin-top:0">${remTasks.map((i) => noticeCard({ ...i, period: i.periodLabel }, { link: true, actions: true, tenantName: i.tenantId ? tenant(i.tenantId)?.fullName : '' }))}</div>` : ''}
     ${debtNotices(openDebtItems(today()), { actions: true })}
     ${phoneNotices()}
+    ${remSoon.length ? html`<h2 class="sec">Sắp đến ngày thu tiền (${remSoon.length}) <span class="muted small">– chỉ nhắc trước, không tính vào số thông báo</span></h2><div class="notices">${remSoon.map((i) => noticeCard({ ...i, period: i.periodLabel }, { link: true, actions: true, tenantName: i.tenantId ? tenant(i.tenantId)?.fullName : '' }))}</div>` : ''}
     ${eventsAheadList(S.snap.db.events, today())}
     <h2 class="sec">Tổng quan</h2>
     <div class="cards7"><div class="stat roomstat"><b>${rooms.length}</b><span>Tổng số phòng</span><span class="sub blk">Phòng đang khóa: <b class="inl">${rooms.filter((r) => r.status === 'notready').length}</b></span></div>${stat(toCollect, 'Phòng cần thu tiền', 'redtxt')}${stat(vnd(debt), 'Tổng công nợ', 'debt')}</div>

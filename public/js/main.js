@@ -23,7 +23,8 @@ import { setBadge, badgeButton, allowBadge, registerSW, subscribeThisDevice, pus
 const app = () => $('#app');
 let timer = null;
 
-const notifCount = () => DV().reminders.length + DV().usage.alerts.length + DV().debts.openAll + (DV().phoneChecks || []).length;
+// Số việc cần làm: lấy từ máy chủ (cùng một cách tính cho chuông trong, chuông ngoài, số trên icon và thông báo mỗi sáng)
+const notifCount = () => DV().tasks?.total ?? 0;
 function shell(active, inner) {
   const n = notifCount();
   const t = today();
