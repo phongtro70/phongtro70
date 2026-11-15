@@ -15,9 +15,9 @@ const zaloUrl = (n) => `https://zalo.me/${String(n || '').replace(/[^\d]/g, '').
 export const zaloBtn = (name, num_, label = name) => (num_ ? html`<a class="zbtn" href="${zaloUrl(num_)}" target="_blank" rel="noopener" title="Mở Zalo của ${name}"><span class="zi" aria-hidden="true">Z</span><span>${label}</span></a>` : html`<span class="zbtn off" title="Chưa nhập số Zalo"><span class="zi" aria-hidden="true">Z</span><span>${label} (chưa có số)</span></span>`);
 const telUrl = (n) => `tel:${String(n || '').replace(/[^\d+]/g, '')}`;
 const phoneShow = (n) => String(n || '').replace(/^(\d{4})(\d{3})(\d{3,4})$/, '$1 $2 $3');
-export const callBtn = (name, phone) => (phone ? html`<a class="cbtn" href="${telUrl(phone)}" title="Gọi điện cho ${name}"><span class="ci" aria-hidden="true">${icon('phone', '1.05em')}</span><span>Gọi ${phoneShow(phone)}</span></a>` : '');
+export const callBtn = (name, phone) => (phone ? html`<a class="cbtn" href="${telUrl(phone)}" title="Gọi điện cho ${name}"><span class="ci" aria-hidden="true">${icon('phone', '1.05em')}</span><span>Gọi</span></a>` : '');
 // Mỗi người một hàng: tên + nút Zalo + nút Gọi (nếu không muốn nhắn Zalo)
-export const contactRow = (t, occs = []) => html`<div class="zalo-row contacts">${[t, ...occs].map((p) => html`<div class="crow"><b class="cname">${p.fullName}</b>${zaloBtn(p.fullName, p.zalo || p.phone, 'Zalo')}${callBtn(p.fullName, p.phone)}</div>`)}</div>`;
+export const contactRow = (t, occs = []) => html`<div class="zalo-row contacts">${[t, ...occs].map((p) => html`<div class="crow"><b class="cname">${p.fullName}</b>${p.zalo || p.phone ? zaloBtn(p.fullName, p.zalo || p.phone, 'Zalo') : ''}${callBtn(p.fullName, p.phone)}${!p.zalo && !p.phone ? html`<span class="muted">Chưa có số điện thoại</span>` : ''}</div>`)}</div>`; // không có số thì ẩn nút Zalo / Gọi
 
 // Phòng đang sửa chữa / chưa sẵn sàng: không mở được, báo lý do (ghi chú của phòng)
 export function blockedDialog(rm) {
@@ -122,7 +122,9 @@ acts.movein = (el) => {
   openModal(`Thêm khách thuê – ${rm.name}`, html`<form data-form="movein" data-room="${rm.id}" data-live="movein">
     <fieldset><legend>Thông tin khách thuê</legend>${personFields()}</fieldset>
     <fieldset><legend>Thuê phòng</legend>${field('Ngày bắt đầu vào ở *', html`<input type="date" name="startDate" required value="${todayLocal()}">`, 'Ngày thu tiền hằng tháng tính theo ngày này. Kỳ đầu thu đủ tiền phòng.')}
-      <div class="warn-box" id="oldstart" hidden>Ngày vào ở đã quá 1 tháng: hệ thống tạo hóa đơn cho <b>kỳ đang chạy</b>. Hãy nhập chỉ số điện nước <b>hiện tại trên đồng hồ</b> và (nếu có) nợ cũ bên dưới.</div>
+      <div class="warn-box" id="oldstart" hidden><b>Ngày vào ở đã quá 1 tháng. Bạn đang nhập trường hợp nào?</b>
+        <label class="opt"><input type="radio" name="mode" value="late" checked> <span><b>Khách mới vào, CHƯA thu tiền tháng trước</b> (tôi nhập trễ) – tính tiền từ tháng đầu tiên. Chỉ số điện nước ban đầu = số đồng hồ <b>lúc khách vào</b>. Lưu xong, phòng hiện nhắc <b>"Ghi điện nước (trễ)"</b> → bấm <b>Tính tiền</b>, chọn đúng <b>Ngày chốt số</b> để lập hóa đơn các tháng đã qua.</span></label>
+        <label class="opt"><input type="radio" name="mode" value="existing"> <span><b>Khách ở từ trước, ĐÃ thu tiền các tháng trước rồi</b> – chỉ tính từ <b>tháng đang chạy</b>. Chỉ số điện nước ban đầu = số <b>hiện tại</b> trên đồng hồ. Nếu khách còn nợ gì thì nhập ở mục <b>Tiền Nợ Cũ</b>.</span></label></div>
       <label class="radios paidbox"><input type="checkbox" name="paidAlready" checked> <b>Đã thu đủ tiền phòng kỳ đầu</b> (nhận khi khách vào). Bỏ tích nếu chưa nhận.</label>
       <div id="existbox" hidden></div>
       <div class="two">${field('Giá thuê phòng / tháng (đ) *', html`<input name="rent" inputmode="numeric" required>`)}${field('Giá điện (đ/số) *', html`<input name="elecPrice" inputmode="numeric" required>`)}</div>
@@ -139,10 +141,12 @@ live.movein = (f) => {
   const sd = f.startDate.value; const now = todayLocal(); let old = false;
   if (sd && sd < now) { const [y, m, d] = sd.split('-').map(Number); const [ty, tm] = now.split('-').map(Number); let k = (ty * 12 + tm) - (y * 12 + m); const dim = (yy, mm) => new Date(Date.UTC(yy, mm, 0)).getUTCDate(); const start = (kk) => { const t = y * 12 + (m - 1) + kk; const ny = Math.floor(t / 12), nm = (t % 12) + 1; return `${ny}-${String(nm).padStart(2, '0')}-${String(Math.min(d, dim(ny, nm))).padStart(2, '0')}`; }; while (k > 0 && start(k) > now) k--; old = k > 0; }
   $('#existbox').hidden = !old; $('#oldstart').hidden = !old;
+  const mode = old ? (f.querySelector('input[name=mode]:checked')?.value || 'late') : 'new';
+  if (f.dataset.lastMode !== mode) { f.dataset.lastMode = mode; if (f.paidAlready) f.paidAlready.checked = mode !== 'late'; } // nhập trễ = chưa thu tháng đầu; đổi lại được bằng tay
 };
 forms.movein = async (f, fd) => {
   const blocks = [...f.querySelectorAll('.occ')]; const occupants = blocks.map(collectOccupant);
-  const body = { roomId: f.dataset.room, tenant: collectPerson(fd), occupants, startDate: fd.get('startDate'), oldDebt: collectOldDebt(fd), paidAlready: fd.get('paidAlready') === 'on', rent: toInt(fd.get('rent')), deposit: toInt(fd.get('deposit')) || 0, payCycle: fd.get('payCycle') || 'month', elecPrice: toInt(fd.get('elecPrice')), waterPrice: toInt(fd.get('waterPrice')), initElec: toDec(fd.get('initElec')), initWater: toDec(fd.get('initWater')), note: fd.get('note') };
+  const body = { roomId: f.dataset.room, tenant: collectPerson(fd), occupants, startDate: fd.get('startDate'), oldDebt: collectOldDebt(fd), mode: f.querySelector('#oldstart')?.hidden === false ? fd.get('mode') || 'late' : undefined, paidAlready: fd.get('paidAlready') === 'on', rent: toInt(fd.get('rent')), deposit: toInt(fd.get('deposit')) || 0, payCycle: fd.get('payCycle') || 'month', elecPrice: toInt(fd.get('elecPrice')), waterPrice: toInt(fd.get('waterPrice')), initElec: toDec(fd.get('initElec')), initWater: toDec(fd.get('initWater')), note: fd.get('note') };
   const j = await save('POST', 'tenants', body, 'Đã lưu khách thuê'); const tid = j.result.tenant.id;
   const jobs = [[tid, 'front'], [tid, 'back'], ...blocks.flatMap((b, i) => (occupants[i].noId ? [] : [[j.result.occupantIds[i], `${b.dataset.slot}-front`, 'front'], [j.result.occupantIds[i], `${b.dataset.slot}-back`, 'back']]))].filter(([, slot]) => getBlob(slot));
   const pending = jobs.map(([owner, slot, side]) => ({ owner, slot, side, blob: getBlob(slot) })); closeModal(); go(`#/room/${body.roomId}`); rerender(); // đóng ngay, không bắt chờ tải ảnh

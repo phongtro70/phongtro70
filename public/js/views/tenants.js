@@ -13,14 +13,23 @@ function statusOf(t) {
 }
 forms.noop = () => {};
 export function tenantsView() {
-  const list = D().tenants.filter((t) => !t.purgedAt).sort((a, b) => a.fullName.localeCompare(b.fullName, 'vi'));
+  // Sắp theo số phòng đang ở (Phòng 1, 2, 3…); khách đã trả phòng xếp sau, theo tên
+  const rk = (t) => { const s = statusOf(t); return s.act ? room(s.act.roomId)?.name || '' : '~'; };
+  const list = D().tenants.filter((t) => !t.purgedAt).sort((a, b) => rk(a).localeCompare(rk(b), 'vi', { numeric: true }) || a.fullName.localeCompare(b.fullName, 'vi'));
   const v = html`<div class="page-head"><h2>Khách thuê</h2></div>
     <form data-form="noop" data-live="tsearch"><input name="q" type="search" placeholder="Tìm theo tên, số điện thoại, CCCD…" aria-label="Tìm khách" autocomplete="off"></form>
     <div class="list" id="tlist" style="margin-top:12px">${list.map(tenantRow)}${list.length ? '' : html`<div class="empty-state">Chưa có khách. Vào một phòng trống để thêm khách thuê.</div>`}</div>`;
   return v;
 }
-const tenantRow = (t) => { const s = statusOf(t); return html`<div class="li" data-search="${(t.fullName + ' ' + t.phone + ' ' + t.cccd).toLowerCase()}"><a href="#/tenant/${t.id}"><b>${t.fullName}</b></a><span class="muted small">${t.phone}</span>
-  <span>${s.act ? html`<span class="badge blue">${room(s.act.roomId).name}</span>` : html`<span class="badge">Đã trả phòng</span>`} ${s.debt ? html`<span class="badge red">Nợ ${vnd(s.debt)}</span>` : ''} ${!s.act ? html`<button class="btn sm danger" data-act="del-tenant" data-id="${t.id}">${icon('trash', '1em')} Xóa</button>` : ''}</span></div>`; };
+const tenantRow = (t) => {
+  const s = statusOf(t); const people = 1 + D().occupants.filter((o) => o.tenantId === t.id).length;
+  return html`<div class="li trow" data-search="${(t.fullName + ' ' + t.phone + ' ' + t.cccd + ' ' + (s.act ? room(s.act.roomId).name : '')).toLowerCase()}">
+  <span class="tr-room">${s.act ? html`<span class="badge blue">${room(s.act.roomId).name}</span>` : html`<span class="badge">Đã trả phòng</span>`}</span>
+  <a class="tr-name" href="#/tenant/${t.id}"><b>${t.fullName}</b></a>
+  <span class="tr-ppl">Số người ở: <b>${s.act ? people : '–'}</b></span>
+  <span class="tr-phone">${t.phone ? html`<a href="tel:${String(t.phone).replace(/[^\d+]/g, '')}">${icon('phone', '1em')} ${t.phone}</a>` : html`<span class="muted">Chưa có số</span>`}</span>
+  ${s.debt || !s.act ? html`<span class="tr-extra">${s.debt ? html`<span class="badge red">Nợ ${vnd(s.debt)}</span>` : ''} ${!s.act ? html`<button class="btn sm danger" data-act="del-tenant" data-id="${t.id}">${icon('trash', '1em')} Xóa</button>` : ''}</span>` : ''}</div>`;
+};
 live.tsearch = (f) => { const q = f.q.value.trim().toLowerCase(); document.querySelectorAll('#tlist [data-search]').forEach((el) => (el.hidden = q && !el.dataset.search.includes(q))); };
 
 export function tenantView(id) {

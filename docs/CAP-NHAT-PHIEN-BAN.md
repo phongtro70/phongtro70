@@ -1,3 +1,24 @@
+# Phiên bản 2026-12-03-b
+- Thẻ việc cần làm: "**Phòng 1 – Lê Văn Cường – Thanh toán: 05/11/2026**".
+- Nhập khách có ngày vào đã quá 1 tháng, 2 lựa chọn ghi rõ:
+  - **Khách mới vào, CHƯA thu tiền tháng trước** (nhập trễ): tính tiền từ tháng đầu; ô "Đã thu đủ tiền phòng kỳ đầu" tự **bỏ tích** (tích lại được nếu đã thu).
+  - **Khách ở từ trước, ĐÃ thu tiền các tháng trước rồi**: chỉ tính từ tháng đang chạy; ô "Đã thu đủ" tự **tích**.
+- Nút **Gọi** chỉ ghi chữ "Gọi" (không hiện số) cho gọn.
+- Thẻ **Chủ Nhà**: nền **xanh biển nhạt**, biểu tượng "người bí mật" (mũ + kính, bộ Material Design Icons "incognito", giống user-secret) thay cho màu vàng đậm.
+
+# Phiên bản 2026-12-03-a
+- **Thẻ phòng**: phòng **đang khóa** nền xám đậm hơn + ổ khóa đậm hơn; phòng **đang cho thuê / đang trống** nền **xanh lá sáng** + hình **ổ khóa mở**; phòng **Chủ Nhà** vàng đậm hơn một tông.
+- **Việc cần xử lý gọn**: mỗi thẻ chỉ còn "**Phòng – Tên khách – Ngày thanh toán**", dòng **Cần làm** chữ to (ví dụ "Cần làm: Ghi điện nước tháng 11/2026" hoặc "Cần làm: Thanh toán tháng 11/2026 – còn …") và 1 nút (**Tính tiền** hoặc **Thanh toán**). Trang ngoài cũng dùng thẻ gọn này.
+- **Chữ to hơn**: mọi chữ trong app từ 1rem trở lên (riêng ngày âm trong ô lịch nhỏ hơn); thanh tab chữ to, trên điện thoại dùng nhãn ngắn (Tổng quan, Khách thuê, Báo cáo, Nhắc nợ, Thu chi, Sao lưu).
+- **Nút quay lại** (← Tổng quan / ← Khách thuê) có viền xanh, dễ thấy.
+- **Không có số điện thoại** thì ẩn nút Zalo và Gọi (ghi "Chưa có số điện thoại").
+- **Tab Khách thuê**: mỗi dòng "Phòng – Tên – Số người ở – Số điện thoại (bấm để gọi)", **sắp theo số phòng**; khách đã trả phòng xếp sau.
+- **Danh sách sự kiện cần nhớ** gọn: "Tên – Ngày dương lịch – Đã qua / Còn n ngày"; bấm vào để xem ngày âm lịch, cách tính, lặp lại, ghi chú và các nút Nhắc / Sửa / Xóa. Đầu lịch trên điện thoại sắp lại cho gọn.
+- **Sửa lỗi giao diện ô ngày** (ngày sinh, ngày cấp CCCD, Từ ngày – Đến ngày trong Báo Cáo Tiền Trọ) bị tràn / lệch trên iPhone, iPad dọc và ngang, máy tính.
+- **Nhập khách trễ** (ví dụ hôm nay 15/11 mà khách vào 05/10): form hỏi rõ 2 trường hợp:
+  - **Khách mới vào từ ngày đó, tôi nhập trễ** (mặc định): tính từ tháng đầu (05/10); chỉ số điện nước ban đầu = số lúc khách vào; tháng 11 hiện nhắc **"Ghi điện nước (trễ n ngày)"** → bấm **Tính tiền**, chọn **Ngày chốt số** đúng ngày đọc đồng hồ để lập hóa đơn tháng 11 (tiền phòng + điện nước tháng 10).
+  - **Khách đã ở từ trước khi dùng phần mềm**: chỉ tính từ kỳ đang chạy (như cũ).
+
 # Phiên bản 2026-12-02-d
 - **Báo trước 7 ngày**: từ 7 ngày trước ngày đến hạn của phòng có **1 thông báo "Ghi điện nước"** (gộp luôn "Sắp đến ngày thu tiền", vì ghi điện nước xong mới lập được hóa đơn để thu). Thẻ phòng ghi "còn n ngày / hôm nay / trễ n ngày".
 - **Ghi điện nước xong** → thông báo đổi thành **"Chưa thanh toán" (cần thu tiền)**. Thu đủ → hết thông báo. Quá ngày đến hạn chưa thu → "Quá hạn thanh toán".

@@ -13,6 +13,25 @@ import { icon, ROOM_ICON, ROOM_TONE } from '../icons.js';
 import { ROOM_STATUS } from '../util.js';
 
 const LEVEL = { red: 'red', orange: 'orange', blue: 'blue', green: 'green' };
+// Thẻ VIỆC CẦN LÀM gọn: "Phòng – Khách – Ngày thanh toán" / "Cần làm: …" (chữ to) / 1 nút
+const ym = (d) => `${Number(String(d).slice(5, 7))}/${String(d).slice(0, 4)}`;
+export function todoText(it) {
+  const m$ = (n) => vnd(n);
+  if (it.type === 'need_readings') { const dl = it.daysLeft ?? 0; return [`Ghi điện nước tháng ${ym(it.dueDate)}`, dl > 0 ? `còn ${dl} ngày` : dl === 0 ? 'hôm nay' : `trễ ${-dl} ngày`]; }
+  if (it.type === 'refund_pending') return [`Hoàn tiền cho khách ${m$(it.remaining)}`, 'đã trả phòng'];
+  if (it.type === 'ended_debt') return [`Thu nợ ${m$(it.remaining)}`, 'khách đã trả phòng'];
+  const months = it.months?.length ? it.months.map((x) => ym(x.ym + '-01')).join(', ') : ym(it.dueDate);
+  return [`Thanh toán tháng ${months}${it.remaining ? ` – còn ${m$(it.remaining)}` : ''}`, it.type === 'overdue' ? 'quá hạn' : it.type === 'partial' ? 'đã trả một phần' : it.type === 'debt' ? 'có nợ cũ' : ''];
+}
+export function taskCard(it, { actions = false, tenantName = '', pub = false } = {}) {
+  const [todo, note] = todoText(it); const payType = ['overdue', 'debt', 'unpaid', 'partial', 'ended_debt'].includes(it.type);
+  const btn = !actions ? '' : it.type === 'need_readings' && it.rentalId ? html`<button class="btn red" data-act="readings" data-id="${it.rentalId}">${icon('bolt', '1.1em')} Tính tiền</button>`
+    : payType && it.invoiceId ? html`<button class="btn green" data-act="pay" data-id="${it.invoiceId}">${icon('check', '1.1em')} Thanh toán</button>` : html`<button class="btn" data-act="open-room" data-id="${it.roomId}">Mở phòng</button>`;
+  const open = pub && it.roomId ? raw(`data-act="pub-room" data-id="${esc(it.roomId)}" data-name="${esc(it.roomName)}" data-pay="${payType ? 1 : 0}"`) : !pub ? raw(`data-act="open-room" data-id="${esc(it.roomId)}"`) : '';
+  return html`<article class="note task ${LEVEL[it.level] || ''} link" ${open}>
+    <div class="t-line"><b class="t-room">${it.roomName}</b>${tenantName ? html` – <span class="t-name">${tenantName}</span>` : ''} – Thanh toán: <b>${dmy(it.dueDate)}</b></div>
+    <div class="t-todo">Cần làm: <b>${todo}</b>${note ? html` <span class="t-note">(${note})</span>` : ''}</div>${btn ? html`<div class="nact">${btn}</div>` : ''}</article>`;
+}
 export function noticeCard(it, { link = false, tenantName = '', actions = false, pub = false } = {}) {
   const per = it.period || it.periodLabel; const m$ = (n) => html`<span class="money">${vnd(n)}</span>`;
   const rows = [];
@@ -32,7 +51,7 @@ export function noticeCard(it, { link = false, tenantName = '', actions = false,
 
 function rosterCard(r) {
   const tone = ROOM_TONE[r.status];
-  return html`<article class="card click room-card st-${tone}" data-act="pub-room" data-id="${r.roomId}" data-name="${r.roomName}">${r.status === 'notready' ? html`<span class="lockmark">${icon('lock', '100%')}</span>` : ''}<div class="rhead"><span class="rbadge ${tone}">${raw(icon(ROOM_ICON[r.status], '1.6em'))}</span><div class="sp"><h3>${r.roomName}</h3><span class="stx ${tone}">${ROOM_STATUS[r.status]}</span></div></div>
+  return html`<article class="card click room-card st-${tone}" data-act="pub-room" data-id="${r.roomId}" data-name="${r.roomName}">${r.status === 'notready' ? html`<span class="lockmark">${icon('lock', '100%')}</span>` : ['occupied', 'empty'].includes(r.status) ? html`<span class="lockmark open">${icon('unlock', '100%')}</span>` : ''}<div class="rhead"><span class="rbadge ${tone}">${raw(icon(ROOM_ICON[r.status], '1.6em'))}</span><div class="sp"><h3>${r.roomName}</h3><span class="stx ${tone}">${ROOM_STATUS[r.status]}</span></div></div>
     ${r.startDate ? html`<dl class="kv"><dt>Ngày vào</dt><dd>${dmy(r.startDate)}</dd>${r.tenantName !== undefined ? html`<dt>Khách</dt><dd class="big">${r.tenantName}</dd>` : ''}<dt>Số người</dt><dd>${r.people}</dd><dt>Nợ</dt><dd class="${r.debt ? 'owe' : 'okc'}">${vnd(r.debt)}</dd>${r.note ? html`<dt>Ghi chú</dt><dd>${r.note}</dd>` : ''}</dl>` : ''}</article>`;
 }
 // Nhắc ghi điện nước: phòng đã tới/qua ngày ghi và phòng sắp tới ngày ghi (tính theo ngày nhận phòng của từng khách)
@@ -67,7 +86,7 @@ function paint(res, note = '') {
       <div class="stat redtxt"><b>${s.unpaidRooms}</b><span>phòng chưa thanh toán đủ</span></div>
       <div class="stat wide redtxt"><b>${vnd(s.totalRemaining)}</b><span>tổng tiền còn cần thu</span></div>
     </div>
-    ${items.some((i) => i.type !== 'upcoming') ? html`<div class="notices">${items.filter((i) => i.type !== 'upcoming').map((i) => noticeCard(i, { pub: true }))}</div>` : ''}${items.some((i) => i.type === 'upcoming') ? html`<div class="sum-title" style="margin-top:14px">SẮP ĐẾN NGÀY THU TIỀN <span class="muted small">(chỉ nhắc trước)</span></div><div class="notices">${items.filter((i) => i.type === 'upcoming').map((i) => noticeCard(i, { pub: true }))}</div>` : ''}
+    ${items.some((i) => i.type !== 'upcoming') ? html`<div class="notices tasks">${items.filter((i) => i.type !== 'upcoming').map((i) => taskCard(i, { pub: true, tenantName: i.tenantName || '' }))}</div>` : ''}${items.some((i) => i.type === 'upcoming') ? html`<div class="sum-title" style="margin-top:14px">SẮP ĐẾN NGÀY THU TIỀN <span class="muted small">(chỉ nhắc trước)</span></div><div class="notices">${items.filter((i) => i.type === 'upcoming').map((i) => noticeCard(i, { pub: true }))}</div>` : ''}
     ${debtNotices(res.debts?.items.map((d) => ({ ...d })) || [], { actions: false })}
     ${eventsAheadList(res.events, res.today)}
     ${usagePanel(res.usage)}

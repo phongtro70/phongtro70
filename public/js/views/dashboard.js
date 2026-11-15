@@ -1,7 +1,7 @@
 import { html, raw, vnd, dmy, ROOM_STATUS } from '../util.js';
 import { D, DV, S, today, activeRental, latestInvOf, tenant, invD, save } from '../api.js';
 import { acts, rerender } from '../ui.js';
-import { noticeCard, readingsBanner } from './public.js';
+import { noticeCard, readingsBanner, taskCard } from './public.js';
 import { debtNotices, openDebtItems } from './debts.js';
 import { usagePanel } from './usage.js';
 import { calendarPanel, eventsAheadList } from './calendar.js';
@@ -25,7 +25,7 @@ export function dashboardView() {
   return html`
     <h2 class="sec sumrow" style="margin-top:4px"><span>Việc cần xử lý (${tk.total})</span>${tk.total ? '' : html`<span class="okpill">${icon('check', '1.1em')} Đã xử lý hết – không có việc cần làm</span>`}</h2>
     ${tk.total ? html`<p class="task-sum">${[tk.readings ? `Ghi điện nước: <b>${tk.readings}</b>` : '', tk.rooms ? `Thu tiền phòng: <b>${tk.rooms}</b>` : '', tk.debts ? `Nhắc nợ riêng: <b>${tk.debts}</b>` : '', tk.phones ? `Số điện thoại: <b>${tk.phones}</b>` : '', tk.leaks ? `Cảnh báo điện nước: <b>${tk.leaks}</b> <a href="#usage-panel" data-act="goto-usage">(xem)</a>` : ''].filter(Boolean).map((x) => raw(x)).reduce((a, x, i) => [...a, i ? ' · ' : '', x], [])}</p>` : ''}
-    ${remTasks.length ? html`<div class="notices" style="margin-top:0">${remTasks.map((i) => noticeCard({ ...i, period: i.periodLabel }, { link: true, actions: true, tenantName: i.tenantId ? tenant(i.tenantId)?.fullName : '' }))}</div>` : ''}
+    ${remTasks.length ? html`<div class="notices tasks" style="margin-top:0">${remTasks.map((i) => taskCard(i, { actions: true, tenantName: i.tenantId ? tenant(i.tenantId)?.fullName : '' }))}</div>` : ''}
     ${debtNotices(openDebtItems(today()), { actions: true })}
     ${phoneNotices()}
     ${remSoon.length ? html`<h2 class="sec">Sắp đến ngày thu tiền (${remSoon.length}) <span class="muted small">– chỉ nhắc trước, không tính vào số thông báo</span></h2><div class="notices">${remSoon.map((i) => noticeCard({ ...i, period: i.periodLabel }, { link: true, actions: true, tenantName: i.tenantId ? tenant(i.tenantId)?.fullName : '' }))}</div>` : ''}
@@ -42,7 +42,7 @@ function roomCard(r) {
   const m = roomMoney(r.id); const tone = ROOM_TONE[r.status];
   const t = m ? tenant(m.r.tenantId) : null; const people = m ? 1 + D().occupants.filter((o) => o.tenantId === m.r.tenantId).length : 0;
   const counted = !!m && !!m.inv.elec; const months = counted ? (DV().months[m.r.chainId] || []).filter((x) => x.outstanding > 0) : [];
-  return html`<article class="card click room-card st-${tone}" data-act="open-room" data-id="${r.id}">${r.status === 'notready' ? html`<span class="lockmark">${icon('lock', '100%')}</span>` : ''}
+  return html`<article class="card click room-card st-${tone}" data-act="open-room" data-id="${r.id}">${r.status === 'notready' ? html`<span class="lockmark">${icon('lock', '100%')}</span>` : ['occupied', 'empty'].includes(r.status) ? html`<span class="lockmark open">${icon('unlock', '100%')}</span>` : ''}
     <div class="rhead"><span class="rbadge ${tone}">${icon(ROOM_ICON[r.status], '1.6em')}</span><div class="sp"><h3>${r.name}</h3><span class="stx ${tone}">${ROOM_STATUS[r.status]}${m ? html` <span class="room-sub">· Vào ${dmy(m.r.startDate)}</span>` : ''}</span></div>${m ? html`<button class="btn red sm rbtn" data-act="readings" data-id="${m.r.id}">${icon('bolt', '1.1em')} Tính tiền</button>` : ''}</div>
     ${m ? html`<dl class="kv"><dt>Khách thuê</dt><dd class="big">${t?.fullName}</dd><dt>Số người</dt><dd>${people}</dd>
       ${counted ? html`${m.d.remaining > 0 ? html`<dt>Tổng cần thu</dt><dd class="big money">${vnd(m.inv.total)}</dd><dt>Đã thanh toán</dt><dd>${vnd(m.d.paid)}</dd>` : ''}<dt>Còn nợ</dt><dd class="${m.d.remaining ? 'owe' : 'okc'}">${vnd(m.d.remaining)}</dd>`
@@ -53,7 +53,7 @@ function roomCard(r) {
 }
 function ownerCard(r) {
   const o = DV().usage.owner;
-  return html`<article class="card click room-card st-orange owner-card" data-act="open-room" data-id="${r.id}"><div class="rhead"><span class="rbadge orange">${icon('home', '1.6em')}</span><div class="sp"><h3>${r.name}</h3><span class="stx orange">Đồng hồ tổng</span></div><button class="btn primary sm ownbtn" data-act="master-add">${icon('bolt', '1.1em')} Ghi đồng hồ tổng</button></div>
+  return html`<article class="card click room-card st-orange owner-card" data-act="open-room" data-id="${r.id}"><span class="lockmark spy">${icon('spy', '100%')}</span><div class="rhead"><span class="rbadge orange">${icon('spy', '1.6em')}</span><div class="sp"><h3>${r.name}</h3><span class="stx orange">Đồng hồ tổng</span></div><button class="btn primary sm ownbtn" data-act="master-add">${icon('bolt', '1.1em')} Ghi đồng hồ tổng</button></div>
     ${o ? html`<dl class="kv"><dt>Điện Chủ Nhà dùng</dt><dd class="big ${o.elec.alert ? 'owe' : ''}">${o.elec.cur} số</dd><dt>Nước Chủ Nhà dùng</dt><dd class="big ${o.water.alert ? 'owe' : ''}">${o.water.cur} khối</dd></dl>` : ''}</article>`;
 }
 
