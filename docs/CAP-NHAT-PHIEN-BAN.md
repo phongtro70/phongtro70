@@ -1,3 +1,14 @@
+# Phiên bản 2026-12-02-d
+- **Báo trước 7 ngày**: từ 7 ngày trước ngày đến hạn của phòng có **1 thông báo "Ghi điện nước"** (gộp luôn "Sắp đến ngày thu tiền", vì ghi điện nước xong mới lập được hóa đơn để thu). Thẻ phòng ghi "còn n ngày / hôm nay / trễ n ngày".
+- **Ghi điện nước xong** → thông báo đổi thành **"Chưa thanh toán" (cần thu tiền)**. Thu đủ → hết thông báo. Quá ngày đến hạn chưa thu → "Quá hạn thanh toán".
+- Cùng với **Nhắc nợ riêng**, **Cập nhật số điện thoại** và **Cảnh báo điện nước** chưa kiểm tra, đó là toàn bộ số thông báo (chuông trong = chuông ngoài = số trên icon = thông báo mỗi sáng).
+
+# Phiên bản 2026-12-02-c
+- **Tới ngày đến hạn của phòng = 2 việc, tính 2 thông báo**: (1) **Ghi điện nước** và (2) **Thu tiền phòng kỳ mới** (tiền phòng thu trước). Thẻ phòng ghi rõ "Việc 1 / Việc 2".
+- Ghi điện nước xong → còn 1 việc (thu tiền, theo hóa đơn vừa lập). Thu đủ tiền → hết việc, số về 0.
+- Tổng quan tách rõ: **Ghi điện nước: x · Thu tiền phòng: y · Nhắc nợ riêng · Số điện thoại · Cảnh báo điện nước**. Chuông trong, chuông ngoài, icon app và thông báo mỗi sáng vẫn dùng chung một số.
+- Trước ngày đến hạn (trong 5 ngày) chỉ hiện "Sắp đến ngày thu tiền / sắp tới ngày ghi", chưa tính vào số.
+
 # Phiên bản 2026-12-02-b
 - **Một con số chung cho mọi nơi**: chuông bên trong, chuông trang ngoài, số trên icon app và thông báo mỗi sáng đều lấy cùng một cách tính ở máy chủ = **số việc cần làm**:
   phòng cần xử lý (quá hạn, còn nợ, chưa thanh toán / thanh toán một phần, chưa ghi điện nước, nợ sau trả phòng, cần hoàn tiền) + khoản **Nhắc nợ riêng** còn mở (cần thu và cần trả) + **số điện thoại tạm** + **cảnh báo điện nước** chưa kiểm tra.

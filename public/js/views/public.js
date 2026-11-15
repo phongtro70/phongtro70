@@ -16,7 +16,8 @@ const LEVEL = { red: 'red', orange: 'orange', blue: 'blue', green: 'green' };
 export function noticeCard(it, { link = false, tenantName = '', actions = false, pub = false } = {}) {
   const per = it.period || it.periodLabel; const m$ = (n) => html`<span class="money">${vnd(n)}</span>`;
   const rows = [];
-  if (it.type === 'need_readings') rows.push(['Kỳ thanh toán', monthLabel(per)], ['Trạng thái', 'Chưa ghi chỉ số điện nước'], ['Ngày cần xử lý', dmy(it.dueDate)]);
+  const duePay = (it.also || []).find((x) => x.startsWith('Đến hạn thanh toán'));
+  if (it.type === 'need_readings') { const dl = it.daysLeft ?? 0; rows.push(['Kỳ thanh toán', monthLabel(per)], ['Việc cần làm', 'Ghi chỉ số điện nước → lập hóa đơn → thu tiền'], ['Ngày đến hạn', html`${dmy(it.dueDate)} <b class="${dl > 0 ? '' : 'owe'}">(${dl > 0 ? `còn ${dl} ngày` : dl === 0 ? 'hôm nay' : `trễ ${-dl} ngày`})</b>`]); }
   else if (it.type === 'upcoming') rows.push(['Kỳ thanh toán', monthLabel(per)], ['Trạng thái', 'Sắp đến ngày thu tiền'], ['Ngày đến hạn', dmy(it.dueDate)]);
   else if (it.type === 'refund_pending') rows.push(['Trạng thái', 'Cần hoàn tiền cho khách đã trả phòng'], ['Số tiền cần hoàn', m$(it.remaining)], ['Ngày trả phòng', dmy(it.dueDate)]);
   else { rows.push(['Kỳ thanh toán', monthLabel(per)], ['Trạng thái', it.label]); if (it.months?.length) rows.push(['Chưa thanh toán', it.months.map((m) => `Tháng ${Number(m.ym.slice(5))}`).join(', ')]); rows.push(['Tổng tiền', m$(it.total)], ['Đã thanh toán', m$(it.paid)], ['Còn phải thu', m$(it.remaining)], ['Ngày đến hạn', dmy(it.dueDate)]); }
@@ -26,7 +27,7 @@ export function noticeCard(it, { link = false, tenantName = '', actions = false,
   return html`<article class="note ${LEVEL[it.level] || ''} ${link || pub ? 'link' : ''}" ${link ? raw(`data-act="open-room" data-id="${esc(it.roomId)}"`) : pub && it.roomId ? raw(`data-act="pub-room" data-id="${esc(it.roomId)}" data-name="${esc(it.roomName)}" data-pay="${payType ? 1 : 0}"`) : ''}>
     <h3>${String(it.roomName).toUpperCase()}${tenantName ? html` <span class="muted small">· ${tenantName}</span>` : ''}</h3>
     <dl>${rows.map(([k, v]) => html`<dt>${k}</dt><dd>${v}</dd>`)}</dl>
-    ${it.also?.length ? html`<div class="also">Đồng thời: ${it.also.join('; ')}</div>` : ''}${btns}</article>`;
+    ${(it.also || []).filter((x) => x !== duePay || it.type !== 'need_readings').length ? html`<div class="also">Đồng thời: ${(it.also || []).filter((x) => x !== duePay || it.type !== 'need_readings').join('; ')}</div>` : ''}${btns}</article>`;
 }
 
 function rosterCard(r) {

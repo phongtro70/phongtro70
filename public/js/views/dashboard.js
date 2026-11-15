@@ -24,7 +24,7 @@ export function dashboardView() {
   const stat = (n, l, cls = '') => html`<div class="stat ${cls}"><b>${n}</b><span>${l}</span></div>`;
   return html`
     <h2 class="sec sumrow" style="margin-top:4px"><span>Việc cần xử lý (${tk.total})</span>${tk.total ? '' : html`<span class="okpill">${icon('check', '1.1em')} Đã xử lý hết – không có việc cần làm</span>`}</h2>
-    ${tk.total ? html`<p class="task-sum">${[tk.rooms ? `Phòng: <b>${tk.rooms}</b>` : '', tk.debts ? `Nhắc nợ riêng: <b>${tk.debts}</b>` : '', tk.phones ? `Số điện thoại: <b>${tk.phones}</b>` : '', tk.leaks ? `Cảnh báo điện nước: <b>${tk.leaks}</b> <a href="#usage-panel" data-act="goto-usage">(xem)</a>` : ''].filter(Boolean).map((x) => raw(x)).reduce((a, x, i) => [...a, i ? ' · ' : '', x], [])}</p>` : ''}
+    ${tk.total ? html`<p class="task-sum">${[tk.readings ? `Ghi điện nước: <b>${tk.readings}</b>` : '', tk.rooms ? `Thu tiền phòng: <b>${tk.rooms}</b>` : '', tk.debts ? `Nhắc nợ riêng: <b>${tk.debts}</b>` : '', tk.phones ? `Số điện thoại: <b>${tk.phones}</b>` : '', tk.leaks ? `Cảnh báo điện nước: <b>${tk.leaks}</b> <a href="#usage-panel" data-act="goto-usage">(xem)</a>` : ''].filter(Boolean).map((x) => raw(x)).reduce((a, x, i) => [...a, i ? ' · ' : '', x], [])}</p>` : ''}
     ${remTasks.length ? html`<div class="notices" style="margin-top:0">${remTasks.map((i) => noticeCard({ ...i, period: i.periodLabel }, { link: true, actions: true, tenantName: i.tenantId ? tenant(i.tenantId)?.fullName : '' }))}</div>` : ''}
     ${debtNotices(openDebtItems(today()), { actions: true })}
     ${phoneNotices()}
