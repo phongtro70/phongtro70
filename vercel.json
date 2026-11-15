@@ -30,12 +30,31 @@
           "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' blob: data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
         }
       ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
+      ]
     }
   ],
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "/api/index?path=:path*"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/push",
+      "schedule": "0 0 * * *"
     }
   ]
 }

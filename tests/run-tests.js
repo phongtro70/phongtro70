@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import { addMonthsClamp, periodIndexOf, periodStart, todayVN } from '../lib/dates.js';
 import { emptyDb, validateDb } from '../lib/schema.js';
 import * as B from '../lib/billing.js';
-import { buildReminders, buildSummary, publicReminders, readingsDue } from '../lib/reminders.js';
+import { buildReminders, buildSummary, publicReminders, readingsDue, badgeCount, taskBreakdown } from '../lib/reminders.js';
 import { purgeOld, storageInfo } from '../lib/cleanup.js';
 import { buildSystem } from '../lib/health.js';
 import { solarToLunar, lunarToSolar } from '../public/js/lunar.js';
@@ -493,6 +493,18 @@ t('số điện thoại tạm: 6 chữ số giống nhau liên tiếp thì nhắ
   let c = P.phoneChecks(db); assert.equal(c.length, 1); assert.equal(c[0].field, 'phone'); assert.equal(c[0].roomName, 'Phòng 1');
   P.confirmPhone(db, { kind: c[0].kind, id: c[0].personId, field: 'phone' }); assert.equal(P.phoneChecks(db).length, 0);
   db.tenants[0].phone = '0444444444'; db.tenants[0].zalo = '0444444444'; assert.equal(P.phoneChecks(db).length, 1);
+});
+t('số việc cần làm: một cách tính chung; "sắp đến hạn" không tính; làm xong hết thì về 0', () => {
+  const { db, rental, inv0 } = setup('2026-11-10', '2026-11-10', { paidAlready: true, tenant: { ...person, phone: '0111111111' } });
+  assert.equal(taskBreakdown(db, '2026-12-06').rooms, 0); assert.equal(buildReminders(db, '2026-12-06')[0].type, 'upcoming'); // sắp đến hạn: chỉ nhắc, không tính
+  db.debts.push({ id: 'd1', name: 'Anh Ba', amount: 100000, date: '2026-11-01', payments: [] });
+  const inv1 = B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 1, elecNew: 110, waterNew: 11 }, '2026-12-10');
+  let tb = taskBreakdown(db, '2026-12-11'); assert.deepEqual([tb.rooms, tb.debts, tb.phones], [1, 1, 1]); assert.equal(badgeCount(db, '2026-12-11'), 3);
+  assert.equal(publicReminders(db, '2026-12-11').badgeCount, 3); // trang ngoài trả đúng cùng con số
+  B.addPayment(db, { invoiceId: inv1.id, amount: B.remainingOf(db, inv1), date: '2026-12-11', allMonths: true }, '2026-12-11');
+  db.debts[0].payments.push({ id: 'p1', amount: 100000, date: '2026-12-11' });
+  P.confirmPhone(db, { kind: 'tenant', id: db.tenants[0].id, field: 'phone' });
+  assert.equal(badgeCount(db, '2026-12-11'), 0); assert.equal(publicReminders(db, '2026-12-11').badgeCount, 0);
 });
 console.log(`\nKết quả: ${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);
