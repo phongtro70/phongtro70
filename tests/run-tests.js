@@ -11,6 +11,7 @@ import * as EV from '../public/js/events-core.js';
 import { moneyWords } from '../lib/vnwords.js';
 import { contractData, buildContract, contractHtml, contractDocx } from '../lib/contract.js';
 import { analyze, roomSeries, usageOverview, ownerSeries } from '../lib/usage.js';
+import * as P from '../lib/phones.js';
 
 let pass = 0, fail = 0;
 const t = (name, fn) => { try { fn(); pass++; console.log('  ✓', name); } catch (e) { fail++; console.log('  ✗', name, '\n   ', e.message); } };
@@ -465,5 +466,33 @@ t('hợp đồng: điền đúng dữ liệu (Bên A, Bên B, quê quán, ngư�
   assert.ok(html.includes('☒ </b>') || html.includes('☒'), 'có đánh dấu hình thức thanh toán'); const buf = contractDocx(blocks); assert.equal(buf.slice(0, 2).toString(), 'PK'); assert.ok(buf.length > 5000);
 });
 
+console.log('BẢN 2026-12-01: CHỈ SỐ BAN ĐẦU, TIỀN NỢ CŨ, SỐ ĐIỆN THOẠI TẠM');
+t('đổi giá: sửa chỉ số điện/nước ban đầu khi chưa ghi điện nước; giá giữ nguyên thì không tạo bản ghi giá mới', () => {
+  const { db, rental } = setup('2026-11-10', '2026-11-10'); const n = db.priceHistories.length;
+  B.changePrice(db, { rentalId: rental.id, rent: 1200000, elecPrice: 2000, waterPrice: 15000, initElec: 150, initWater: 12 }, '2026-11-12');
+  assert.equal(rental.initElec, 150); assert.equal(rental.initWater, 12); assert.equal(db.priceHistories.length, n);
+  const inv = B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 1, elecNew: 160, waterNew: 13 }, '2026-12-10'); assert.equal(inv.elec.old, 150); assert.equal(inv.elec.amount, 20000);
+  throwsCode(() => B.changePrice(db, { rentalId: rental.id, rent: 1200000, elecPrice: 2000, waterPrice: 15000, initElec: 100, initWater: 12 }, '2026-12-10'), 'HAS_READINGS');
+  throwsCode(() => B.changePrice(db, { rentalId: rental.id, rent: 1200000, elecPrice: 2000, waterPrice: 15000 }, '2026-12-10'), 'BAD_REQUEST');
+});
+t('Tiền Nợ Cũ khi nhận phòng: cộng vào hóa đơn đầu, không bị coi là tiền phòng đã thu; ghi lý do + ngày', () => {
+  const { db, rental, inv0 } = setup('2026-11-10', '2026-11-10', { paidAlready: true, oldDebt: { amount: 500000, reason: 'thiếu tháng trước', date: '2026-11-01' } });
+  assert.equal(inv0.total, 1700000); assert.equal(B.remainingOf(db, inv0), 500000); assert.equal(rental.oldDebtInfo.amount, 500000); assert.match(inv0.manualDebtNote, /thiếu tháng trước/);
+  const inv1 = B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 1, elecNew: 110, waterNew: 11 }, '2026-12-10'); assert.equal(inv1.oldDebt, 500000);
+});
+t('sửa Tiền Nợ Cũ: chênh lệch vào hóa đơn mới nhất; không cho thấp hơn số đã trả; mặc định 0 và ngày hôm nay', () => {
+  const { db, rental, inv0 } = setup('2026-11-10', '2026-11-10', { paidAlready: true });
+  assert.equal(rental.oldDebtInfo, undefined);
+  B.setOldDebt(db, rental.id, { amount: 300000, reason: 'mượn' }, '2026-11-11'); assert.equal(inv0.total, 1500000); assert.equal(rental.oldDebtInfo.date, '2026-11-11');
+  B.setOldDebt(db, rental.id, { amount: 100000, reason: 'mượn', date: '2026-11-05' }, '2026-11-12'); assert.equal(inv0.total, 1300000); assert.equal(rental.oldDebtInfo.history.length, 1);
+  throwsCode(() => B.setOldDebt(db, rental.id, { amount: -1 }, '2026-11-12'), 'BAD_REQUEST');
+});
+t('số điện thoại tạm: 6 chữ số giống nhau liên tiếp thì nhắc; bấm "Số đúng" thì không nhắc nữa; đổi số khác lại kiểm tra', () => {
+  assert.ok(P.suspiciousPhone('0111111111')); assert.ok(P.suspiciousPhone('0922222299')); assert.ok(!P.suspiciousPhone('0901234567')); assert.ok(!P.suspiciousPhone('0911111234'));
+  const { db } = setup('2026-11-10', '2026-11-10', { tenant: { ...person, phone: '0333333333', zalo: '0333333333' }, occupants: [{ fullName: 'B', phone: '0901234567' }] });
+  let c = P.phoneChecks(db); assert.equal(c.length, 1); assert.equal(c[0].field, 'phone'); assert.equal(c[0].roomName, 'Phòng 1');
+  P.confirmPhone(db, { kind: c[0].kind, id: c[0].personId, field: 'phone' }); assert.equal(P.phoneChecks(db).length, 0);
+  db.tenants[0].phone = '0444444444'; db.tenants[0].zalo = '0444444444'; assert.equal(P.phoneChecks(db).length, 1);
+});
 console.log(`\nKết quả: ${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);

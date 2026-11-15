@@ -18,28 +18,30 @@ import { debtsView } from './views/debts.js';
 import { ledgerView } from './views/ledger.js';
 import { blockedDialog } from './views/room.js';
 import { ROOM_ICON } from './icons.js';
+import { setBadge, badgeButton, allowBadge } from './badge.js';
 
 const app = () => $('#app');
 let timer = null;
 
+const notifCount = () => DV().reminders.length + DV().usage.alerts.length + DV().debts.openAll + (DV().phoneChecks || []).length;
 function shell(active, inner) {
-  const n = DV().reminders.length + DV().usage.alerts.length + DV().debts.openAll;
+  const n = notifCount();
   const t = today();
   const nav = [['dashboard', 'Tổng quan', 'home'], ['tenants', 'Khách thuê', 'users'], ['reports', 'Báo Cáo Tiền Trọ', 'chart'], ['debts', 'Nhắc Nợ (Riêng)', 'money'], ['ledger', 'Thu Chi (Riêng)', 'card'], ['backup', 'Sao lưu', 'shield']];
   const ahead = eventsAhead(S.snap.db.events, t).slice(0, 4);
   return html`<div class="top"><div class="in"><div class="tl"><h1>PHÒNG TRỌ 70 HOÀNG SÂM<span class="credit">BusCafe</span></h1><div id="ubar">${usageBar(S.snap.system)}</div><div id="alerts">${alertsHtml(S.snap.system)}</div>
     <div class="dt">${weekday(t)}, ${dmy(t)}<br>Âm lịch: ${lunarText(t)}</div>${ahead.length ? html`<div class="hdr-events">${ahead.map((u) => html`<span>${icon('star', '1em')} ${u.ev.name} – ${dmy(u.date).slice(0, 5)} (${u.left === 0 ? 'hôm nay' : `còn ${u.left} ngày`})</span>`)}</div>` : ''}</div>
-    <div class="tr">${a2hsChip()}<a class="bell ${n ? '' : 'zero'}" href="#/dashboard" title="Thông báo">${icon('bell', '1.25em')}<span class="bn">${n}</span></a><button class="btn sm" data-act="logout">Đăng xuất</button></div></div></div>
+    <div class="tr">${a2hsChip()}${badgeButton()}<a class="bell ${n ? '' : 'zero'}" href="#/dashboard" title="Thông báo">${icon('bell', '1.25em')}<span class="bn">${n}</span></a><button class="btn sm" data-act="logout">Đăng xuất</button></div></div></div>
     <nav class="nav"><div class="in">${nav.map(([k, l, ic]) => html`<a href="#/${k}" data-tab="${k}" class="${active === k ? 'on' : ''}">${icon(ic, '1.35em')}<span>${l}</span></a>`)}</div></nav>
     <main class="wrap">${raw(eventBanner(S.snap.db.events, t))}${inner}
       <div id="a2hs">${a2hsButton()}</div>
       <footer class="page-foot"><div id="footstrip">${footStrip(S.snap.system, { link: true })}</div><div class="upd">Phiên bản giao diện: ${APP_VERSION}</div></footer></main>`.s;
 }
 
-async function render() {
+async function render(opts = {}) {
   clearInterval(timer);
   const [name, id] = location.hash.replace(/^#\/?/, '').split('/');
-  window.scrollTo(0, 0);
+  const y = window.scrollY; if (!opts.keepScroll) window.scrollTo(0, 0);
   if (!S.loggedIn) {
     if (name === 'login') return loginView(app());
     await publicView(app());
@@ -57,9 +59,21 @@ async function render() {
   const out = v[1]();
   app().innerHTML = shell(v[0], out);
   if (out.after) out.after();
+  setBadge(notifCount());
+  if (opts.keepScroll) window.scrollTo(0, y);
 }
 window.addEventListener('sysstatus', () => refreshStatus(S.snap?.system || S.pub?.system, S.loggedIn));
 acts['retry-load'] = () => render();
+// Nút "Tải lại dữ liệu" (cạnh phải màn hình): lấy dữ liệu mới nhất khi máy/tab khác vừa nhập, giữ nguyên vị trí đang xem
+let reloading = false;
+acts['reload-data'] = async (el) => {
+  if (reloading) return; reloading = true; el.classList.add('spin');
+  try {
+    if (S.loggedIn) { await loadData(); await render({ keepScroll: true }); } else { await loadPublic(); }
+    toast(`Đã tải dữ liệu mới nhất (${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })})`);
+  } catch (e) { toast(e.message, 'err'); } finally { reloading = false; el.classList.remove('spin'); }
+};
+acts['badge-allow'] = async () => { if (await allowBadge()) { toast('Đã bật số thông báo trên icon'); render({ keepScroll: true }); } else toast('Chưa được cho phép. Vào Cài đặt → Thông báo → Phòng Trọ 70 để bật.', 'err'); };
 acts.logout = async () => { try { sessionStorage.removeItem('pt70_tab'); } catch { /* bỏ qua */ } try { await api('POST', 'auth/logout', {}); } catch { /* bỏ qua */ } S.loggedIn = false; S.csrf = null; S.snap = null; go('#/'); toast('Đã đăng xuất'); };
 acts['open-room'] = (el) => { const r = S.snap?.db.rooms.find((x) => x.id === el.dataset.id); if (r && !r.kind && (r.status === 'repair' || r.status === 'notready')) { blockedDialog(r); return; } go(`#/room/${el.dataset.id}`); };
 setUnauthHandler(() => { S.snap = null; go('#/login'); toast('Phiên đăng nhập đã hết (5 phút không hoạt động). Vui lòng đăng nhập lại.', 'err'); });
@@ -69,6 +83,8 @@ setInterval(() => { if (S.loggedIn && Date.now() - lastAct < 270000) api('POST',
 
 (async function boot() {
   initEvents(); setRender(render);
+  const fab = document.createElement('button'); fab.type = 'button'; fab.className = 'reload-fab'; fab.dataset.act = 'reload-data'; fab.title = 'Tải lại dữ liệu mới nhất';
+  fab.innerHTML = `${String(icon('rotate', '1.15em'))}<span>Tải lại dữ liệu</span>`; document.body.appendChild(fab);
   try { await loadSession(); } catch { /* chưa đăng nhập */ }
   // Đóng tab/trang rồi mở lại (cờ trong sessionStorage đã mất) => hủy phiên cũ, yêu cầu nhập lại mật khẩu
   let flag = null; try { flag = sessionStorage.getItem('pt70_tab'); } catch { flag = '1'; }

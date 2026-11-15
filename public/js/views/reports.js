@@ -15,23 +15,51 @@ export function reportsView() {
     <div id="rep"><p class="boot">Đang tính…</p></div>`;
   v.after = loadReport; return v;
 }
+let repMode = 'month'; // xem theo tháng | theo phòng
+const TYPE = { first: 'Tiền phòng đầu kỳ (khi vào ở)', month: 'Tiền phòng + điện nước', rentOnly: 'Tiền phòng (chưa ghi điện nước)', checkout: 'Trả phòng (quyết toán)', transfer: 'Chốt phòng cũ (chuyển phòng)' };
+const STATUS = { paid: ['green', 'Đã thu đủ'], partial: ['orange', 'Thu một phần'], unpaid: ['red', 'Chưa thu'], refund: ['blue', 'Hoàn lại khách'] };
+const meter = (m, unit) => (m ? html`${vnd(m.amount)}<span class="rp-sub">${m.old} → ${m.new} = ${m.usage} ${unit} × ${vnd(m.price)}</span>` : html`<span class="muted">—</span>`);
+const sumOf = (rows) => rows.reduce((a, d) => ({ rent: a.rent + d.rent, elec: a.elec + (d.elec?.amount || 0), water: a.water + (d.water?.amount || 0), other: a.other + d.extras + d.oldDebtAdd - d.deposit, own: a.own + Math.max(0, d.own), paid: a.paid + d.paid, out: a.out + d.outstanding, first: a.first + (d.type === 'first' ? d.rent : 0), firstPaid: a.firstPaid + (d.type === 'first' ? Math.min(d.paid, d.rent) : 0) }), { rent: 0, elec: 0, water: 0, other: 0, own: 0, paid: 0, out: 0, first: 0, firstPaid: 0 });
+function detailRow(d, by) {
+  const [tone, st] = STATUS[d.status] || ['gray', d.status];
+  const other = d.extras + d.oldDebtAdd - d.deposit;
+  const td = (l, v, cls = '') => html`<td data-l="${l}" class="${cls}"><span class="rp-v">${v}</span></td>`; // bọc nội dung để trên điện thoại chữ phụ nằm dưới số tiền
+  return html`<tr class="rp-${d.status}">${by === 'month' ? td('Phòng', html`<b>${d.room}</b><span class="rp-sub">${d.tenant}</span>`) : td('Tháng', html`<b>${monthLabel(d.ym)}</b><span class="rp-sub">${d.tenant}</span>`)}
+    ${td('Khoản thu', html`<span class="rp-type ${d.type}">${TYPE[d.type] || d.type}</span><span class="rp-sub">Hạn thu ${dmy(d.dueDate)}</span>`)}
+    ${td('Tiền phòng', vnd(d.rent), 'r')}${td('Tiền điện', meter(d.elec, 'số'), 'r')}${td('Tiền nước', meter(d.water, 'khối'), 'r')}
+    ${td('Khác / nợ cũ', other ? html`${vnd(other)}${d.oldDebtAdd ? html`<span class="rp-sub">Nợ cũ ${vnd(d.oldDebtAdd)}${d.oldDebtNote ? ` (${d.oldDebtNote})` : ''}</span>` : ''}${d.deposit ? html`<span class="rp-sub">Trừ cọc ${vnd(d.deposit)}</span>` : ''}` : html`<span class="muted">—</span>`, 'r')}
+    ${td('Tổng tiền', html`<b>${vnd(d.own)}</b>`, 'r')}${td('Đã thu', html`${vnd(d.paid)}${d.payDates.length ? html`<span class="rp-sub">ngày thu ${d.payDates.map((x) => dmy(x).slice(0, 5)).join(', ')}</span>` : ''}`, 'r okc')}
+    ${td('Còn thiếu', vnd(d.outstanding), `r ${d.outstanding ? 'owe' : ''}`)}${td('Trạng thái', html`<span class="badge ${tone}">${st}</span>`)}</tr>`;
+}
+const groupHead = (title, sm, key) => html`<div class="rp-head"><h3>${title}</h3><span class="rp-tot"><span>Tổng <b>${vnd(sm.own)}</b></span><span>Đã thu <b class="okc">${vnd(sm.paid)}</b></span><span>Còn thiếu <b class="${sm.out ? 'owe' : ''}">${vnd(sm.out)}</b></span></span><button class="btn sm danger noprint" data-act="hide-row" data-key="${key}" title="Ẩn khỏi báo cáo">${icon('trash', '1em')} Ẩn</button></div>`;
+function groupTable(rows, by) {
+  return html`<table class="tbl stack rp-tbl"><thead><tr><th>${by === 'month' ? 'Phòng / khách' : 'Tháng / khách'}</th><th>Khoản thu</th><th class="r">Tiền phòng</th><th class="r">Tiền điện</th><th class="r">Tiền nước</th><th class="r">Khác / nợ cũ</th><th class="r">Tổng tiền</th><th class="r">Đã thu</th><th class="r">Còn thiếu</th><th>Trạng thái</th></tr></thead><tbody>${rows.map((d) => detailRow(d, by))}</tbody></table>`;
+}
 async function loadReport() {
   const box = $('#rep'); if (!box) return;
   try {
     const r = await api('GET', `reports?from=${range.from}&to=${range.to}`); last = r;
-    const h = hidden(); const vm = r.months.filter((m) => !h.has(`m:${m.ym}`)); const vr = r.rooms.filter((m) => !h.has(`r:${m.room}`)); const nHidden = r.months.length - vm.length + r.rooms.length - vr.length;
-    const t = vm.reduce((a, m) => ({ rent: a.rent + m.rent, elec: a.elec + m.elec, water: a.water + m.water, extras: a.extras + m.extras + m.adjust, billed: a.billed + m.billed, collected: a.collected + m.collected }), { rent: 0, elec: 0, water: 0, extras: 0, billed: 0, collected: 0 });
-    box.innerHTML = html`${nHidden ? html`<div class="warn-box">Đang ẩn <b>${nHidden}</b> dòng khỏi báo cáo này (chỉ ẩn trên màn hình, sổ sách không thay đổi). <button class="btn sm" data-act="show-rows">Hiện lại tất cả</button></div>` : ''}<div class="cards7"><div class="stat"><b>${vnd(t.rent)}</b><span>Tổng tiền thuê</span></div><div class="stat"><b>${vnd(t.elec)}</b><span>Tổng tiền điện</span></div><div class="stat"><b>${vnd(t.water)}</b><span>Tổng tiền nước</span></div><div class="stat"><b>${vnd(t.billed)}</b><span>Tổng tiền phải thu (không gồm nợ cũ chuyển kỳ)</span></div><div class="stat"><b>${vnd(t.collected)}</b><span>Tổng tiền đã thu</span></div><div class="stat debt"><b>${vnd(r.debtNow)}</b><span>Tổng công nợ hiện tại</span></div></div>
-    <h2 class="sec">Theo tháng</h2><table class="tbl stack"><thead><tr><th>Tháng</th><th class="r">Tiền phòng</th><th class="r">Điện</th><th class="r">Nước</th><th class="r">Phải thu</th><th class="r">Đã thu</th><th></th></tr></thead><tbody>${vm.map((m) => html`<tr><td data-l="Tháng">${monthLabel(m.ym)}</td><td data-l="Tiền phòng" class="r">${vnd(m.rent)}</td><td data-l="Điện" class="r">${vnd(m.elec)}</td><td data-l="Nước" class="r">${vnd(m.water)}</td><td data-l="Phải thu" class="r">${vnd(m.billed)}</td><td data-l="Đã thu" class="r">${vnd(m.collected)}</td><td class="noprint"><button class="btn sm danger" data-act="hide-row" data-key="m:${m.ym}" title="Xóa dòng này khỏi báo cáo">${icon('trash', '1em')} Xóa dòng</button></td></tr>`)}</tbody></table>
-    <h2 class="sec">Theo phòng</h2><table class="tbl stack"><thead><tr><th>Phòng</th><th class="r">Phải thu</th><th class="r">Đã thu</th><th></th></tr></thead><tbody>${vr.map((m) => html`<tr><td data-l="Phòng">${m.room}</td><td data-l="Phải thu" class="r">${vnd(m.billed)}</td><td data-l="Đã thu" class="r">${vnd(m.collected)}</td><td class="noprint"><button class="btn sm danger" data-act="hide-row" data-key="r:${m.room}" title="Xóa dòng này khỏi báo cáo">${icon('trash', '1em')} Xóa dòng</button></td></tr>`)}</tbody></table>
-    <p class="muted small">Báo cáo theo ngày đến hạn của hóa đơn; "Đã thu" theo ngày thực tế thanh toán. Không chứa ảnh/thông tin CCCD.</p>
+    const h = hidden(); const all = r.details || [];
+    const rows = all.filter((d) => !h.has(`m:${d.ym}`) && !h.has(`r:${d.room}`)); const nHidden = [...h].filter((k) => all.some((d) => k === `m:${d.ym}` || k === `r:${d.room}`)).length;
+    const t = sumOf(rows); const cash = r.months.reduce((a, m) => a + m.collected, 0);
+    const months = [...new Set(rows.map((d) => d.ym))].sort().reverse(); const rooms = [...new Set(rows.map((d) => d.room))].sort((a, b) => a.localeCompare(b, 'vi', { numeric: true }));
+    const stat = (v, l, cls = '') => html`<div class="stat ${cls}"><b>${vnd(v)}</b><span>${l}</span></div>`;
+    box.innerHTML = html`${nHidden ? html`<div class="warn-box">Đang ẩn <b>${nHidden}</b> nhóm khỏi báo cáo này (chỉ ẩn trên màn hình, sổ sách không thay đổi). <button class="btn sm" data-act="show-rows">Hiện lại tất cả</button></div>` : ''}
+    <div class="cards7">${stat(t.first, `Tiền phòng đầu kỳ khi vào ở (đã thu ${vnd(t.firstPaid)})`)}${stat(t.rent, 'Tổng tiền phòng')}${stat(t.elec, 'Tổng tiền điện')}${stat(t.water, 'Tổng tiền nước')}${stat(t.own, 'Tổng tiền các tháng')}${stat(t.paid, 'Đã thu của các tháng này', 'ok')}${stat(t.out, 'Còn thiếu của các tháng này', 'debt')}${stat(cash, 'Tiền thực nhận trong khoảng ngày (theo ngày thu)')}<div class="stat debt"><b>${vnd(r.debtNow)}</b><span>Tổng công nợ hiện tại</span></div></div>
+    <div class="seg noprint" role="tablist"><button class="btn ${repMode === 'month' ? 'primary' : ''}" data-act="rep-mode" data-mode="month">Xem theo tháng</button><button class="btn ${repMode === 'room' ? 'primary' : ''}" data-act="rep-mode" data-mode="room">Xem theo phòng</button></div>
+    ${!rows.length ? html`<div class="empty-state">Không có hóa đơn nào trong khoảng ngày này.</div>` : repMode === 'month'
+      ? months.map((ym) => { const g = rows.filter((d) => d.ym === ym); return html`<section class="rp-group">${groupHead(monthLabel(ym), sumOf(g), `m:${ym}`)}${groupTable(g, 'month')}</section>`; })
+      : rooms.map((rm) => { const g = rows.filter((d) => d.room === rm); return html`<section class="rp-group">${groupHead(rm, sumOf(g), `r:${rm}`)}${groupTable(g, 'room')}</section>`; })}
+    <p class="muted small">Mỗi dòng là tiền của <b>chính tháng đó</b> (không cộng nợ chuyển từ tháng trước, để không đếm hai lần). "Đã thu" là số đã trả cho tháng đó; "Còn thiếu" là phần chưa trả. Tháng tính theo ngày đến hạn thu. "Tiền thực nhận trong khoảng ngày" tính theo ngày khách trả tiền.</p>
     <div class="row noprint"><button class="btn" data-act="rep-csv">⬇ Xuất Excel (CSV)</button><button class="btn" data-act="rep-json">⬇ Xuất JSON</button><button class="btn" data-act="print">🖨 In báo cáo</button></div>`.s;
   } catch (e) { box.innerHTML = html`<div class="err-box">${e.message}</div>`.s; }
 }
+acts['rep-mode'] = (el) => { repMode = el.dataset.mode; loadReport(); };
 forms.report = async (f, fd) => { range = { from: fd.get('from'), to: fd.get('to') }; await loadReport(); };
 const csvCell = (v) => `"${String(v).replace(/"/g, '""')}"`;
 acts['rep-csv'] = () => {
-  const rows = [['Tháng', 'Tiền phòng', 'Tiền điện', 'Tiền nước', 'Phát sinh', 'Phải thu', 'Đã thu'], ...last.months.map((m) => [m.ym, m.rent, m.elec, m.water, m.extras + m.adjust, m.billed, m.collected]), [], ['Phòng', 'Phải thu', 'Đã thu'], ...last.rooms.map((m) => [m.room, m.billed, m.collected])];
+  const rows = [['Tháng', 'Phòng', 'Khách', 'Khoản thu', 'Hạn thu', 'Tiền phòng', 'Số điện dùng', 'Tiền điện', 'Số nước dùng', 'Tiền nước', 'Khác / nợ cũ', 'Tổng tiền', 'Đã thu', 'Còn thiếu', 'Trạng thái', 'Ngày thu'],
+    ...(last.details || []).map((d) => [d.ym, d.room, d.tenant, TYPE[d.type] || d.type, d.dueDate, d.rent, d.elec?.usage ?? '', d.elec?.amount || 0, d.water?.usage ?? '', d.water?.amount || 0, d.extras + d.oldDebtAdd - d.deposit, d.own, d.paid, d.outstanding, (STATUS[d.status] || [, d.status])[1], d.payDates.join(' ')])];
   download(`bao-cao-${last.from}-${last.to}.csv`, '\ufeff' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
 };
 acts['rep-json'] = () => download(`bao-cao-${last.from}-${last.to}.json`, JSON.stringify(last, null, 1));

@@ -1,5 +1,6 @@
 import { html, raw, vnd, dmy, ROOM_STATUS } from '../util.js';
-import { D, DV, S, today, activeRental, latestInvOf, tenant, invD } from '../api.js';
+import { D, DV, S, today, activeRental, latestInvOf, tenant, invD, save } from '../api.js';
+import { acts, rerender } from '../ui.js';
 import { noticeCard, readingsBanner } from './public.js';
 import { debtNotices, openDebtItems } from './debts.js';
 import { usagePanel } from './usage.js';
@@ -25,6 +26,7 @@ export function dashboardView() {
     <h2 class="sec sumrow" style="margin-top:4px"><span>Thông báo cần xử lý (${rem.length})</span>${rem.length ? '' : html`<span class="okpill">${icon('check', '1.1em')} Không có việc cần xử lý</span>`}</h2>
     ${rem.length ? html`<div class="notices" style="margin-top:0">${rem.map((i) => noticeCard({ ...i, period: i.periodLabel }, { link: true, actions: true, tenantName: i.tenantId ? tenant(i.tenantId)?.fullName : '' }))}</div>` : ''}
     ${debtNotices(openDebtItems(today()), { actions: true })}
+    ${phoneNotices()}
     ${eventsAheadList(S.snap.db.events, today())}
     <h2 class="sec">Tổng quan</h2>
     <div class="cards7"><div class="stat roomstat"><b>${rooms.length}</b><span>Tổng số phòng</span><span class="sub blk">Phòng đang khóa: <b class="inl">${rooms.filter((r) => r.status === 'notready').length}</b></span></div>${stat(toCollect, 'Phòng cần thu tiền', 'redtxt')}${stat(vnd(debt), 'Tổng công nợ', 'debt')}</div>
@@ -52,3 +54,14 @@ function ownerCard(r) {
   return html`<article class="card click room-card st-orange owner-card" data-act="open-room" data-id="${r.id}"><div class="rhead"><span class="rbadge orange">${icon('home', '1.6em')}</span><div class="sp"><h3>${r.name}</h3><span class="stx orange">Đồng hồ tổng</span></div><button class="btn primary sm ownbtn" data-act="master-add">${icon('bolt', '1.1em')} Ghi đồng hồ tổng</button></div>
     ${o ? html`<dl class="kv"><dt>Điện Chủ Nhà dùng</dt><dd class="big ${o.elec.alert ? 'owe' : ''}">${o.elec.cur} số</dd><dt>Nước Chủ Nhà dùng</dt><dd class="big ${o.water.alert ? 'owe' : ''}">${o.water.cur} khối</dd></dl>` : ''}</article>`;
 }
+
+// Nhắc cập nhật số điện thoại tạm (6 chữ số giống nhau liên tiếp, ví dụ 0111111111)
+function phoneNotices() {
+  const list = DV().phoneChecks || []; if (!list.length) return '';
+  return html`<h2 class="sec">Cần cập nhật số điện thoại (${list.length})</h2><div class="phonewarn">${list.map((p) => html`<div class="pw-item"><div class="pw-t">${icon('phone', '1.1em')} <b>${p.roomName}</b> · ${p.role}: <b>${p.name}</b><br><span class="small">${p.label}: <b class="pw-num">${p.value}</b> – có vẻ là số tạm, cần cập nhật số thật</span></div>
+    <div class="row"><button class="btn sm" data-act="open-room" data-id="${p.roomId}">${icon('edit', '1em')} Sửa số</button><button class="btn sm green" data-act="phone-ok" data-kind="${p.kind}" data-id="${p.personId}" data-field="${p.field}" data-num="${p.value}">${icon('check', '1em')} Số đúng</button></div></div>`)}</div>`;
+}
+acts['phone-ok'] = async (el) => {
+  if (!confirm(`Xác nhận số ${el.dataset.num} là số ĐÚNG? Sau khi xác nhận sẽ không nhắc số này nữa.`)) return;
+  await save('POST', 'phones/confirm', { kind: el.dataset.kind, id: el.dataset.id, field: el.dataset.field }, 'Đã xác nhận số đúng'); rerender();
+};

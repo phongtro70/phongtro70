@@ -428,3 +428,27 @@ fieldset legend{font-weight:800}fieldset:nth-of-type(1){border-color:rgb(9 128 2
 .cbtn{background:linear-gradient(135deg,#34c759,#12a150)!important;border-radius:999px!important;padding:5px 16px 5px 5px!important;box-shadow:0 2px 8px rgb(18 161 80 / 35%)!important}
 .cbtn .ci{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#fff;color:#12a150;padding:0}.cbtn .ci .ic{color:#12a150!important}
 @media(max-width:760px){.nav .in{gap:0}.nav a{white-space:normal;min-width:0;flex:1 1 0;line-height:1.15;font-size:.62rem;padding:7px 2px;word-break:break-word}.nav a .ic{width:1.25em;height:1.25em}}
+/* ---- v2026-12-01-a ---- */
+/* Tên ngân hàng / chủ tài khoản dài: xuống dòng, không tràn trang */
+.bankview dd,.bbank dd{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word;min-width:0}
+.bankview,.bbank dl,.bbrow dl{grid-template-columns:auto minmax(0,1fr)}
+/* Nút "Tải lại dữ liệu" dọc cạnh phải màn hình */
+.reload-fab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:60;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;cursor:pointer;padding:12px 7px;border-radius:14px 0 0 14px;background:linear-gradient(180deg,#0a84ff,#5e5ce6);color:#fff;font:700 .82rem/1 var(--font);box-shadow:0 4px 14px rgba(0,0,0,.22);opacity:.92}
+.reload-fab span{writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.02em;white-space:nowrap}
+.reload-fab:hover,.reload-fab:focus-visible{opacity:1;padding-right:10px}
+.reload-fab.spin .ic{animation:rfspin .8s linear infinite}@keyframes rfspin{to{transform:rotate(360deg)}}
+@media print{.reload-fab{display:none}}
+#modal:not(:empty)~.reload-fab{display:none}
+/* Nhắc cập nhật số điện thoại tạm */
+.phonewarn{display:grid;gap:10px;margin:8px 0 4px}.pw-item{background:var(--surface);border-radius:var(--rc);padding:12px 14px;box-shadow:var(--shadow);border-left:4px solid var(--orange);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}.pw-item .pw-t{flex:1;min-width:220px}.pw-num{color:var(--orange-t);letter-spacing:.03em}
+/* Báo Cáo Tiền Trọ chi tiết */
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px}
+.rp-group{margin-top:16px}.rp-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 8px}.rp-head h3{margin:0;font-size:1.15rem}.rp-head .rp-tot{flex:1;color:var(--mute);font-size:.95rem}
+.rp-sub{display:block;font-size:.78rem;color:var(--mute);font-weight:400;white-space:normal;line-height:1.3;margin-top:2px}
+.rp-tbl td.r .rp-sub{text-align:right}
+.rp-type{font-weight:700}.rp-type.first{color:#7c3aed}.rp-type.month{color:var(--blue-t)}.rp-type.checkout,.rp-type.transfer{color:var(--orange-t)}
+.rp-tbl tr.rp-unpaid td:first-child{box-shadow:inset 3px 0 0 var(--red)}.rp-tbl tr.rp-partial td:first-child{box-shadow:inset 3px 0 0 var(--orange)}.rp-tbl tr.rp-paid td:first-child{box-shadow:inset 3px 0 0 var(--green)}
+.stat.ok b{color:var(--green-t)}
+.rp-v{display:block;min-width:0}.tbl td.r .rp-v{text-align:right}.rp-head .rp-tot{display:flex;flex-wrap:wrap;gap:2px 14px;order:3;flex-basis:100%}.rp-head h3{flex:1}
+@media(max-width:700px){.reload-fab{padding:10px 5px;font-size:.75rem;opacity:.85}}
+@media(max-width:760px){.tbl.stack td .rp-v{text-align:right}}

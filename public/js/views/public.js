@@ -1,4 +1,5 @@
 import { html, raw, openModal, closeModal, vnd, dmy, monthLabel, weekday, esc, $, toast } from '../util.js';
+import { setBadge } from '../badge.js';
 import { S, api, diagnose } from '../api.js';
 import { APP_VERSION } from '../version.js';
 import { lunarText } from '../lunar.js';
@@ -56,6 +57,7 @@ function paint(res, note = '') {
   $('#pubbanner').innerHTML = eventBanner(res.events, res.today).s; $('#pubcal').innerHTML = calendarPanel().s;
   $('#pubdate').innerHTML = dateBlock(res.today).s; refreshStatus(res.system);
   const bn = $('#pubbell'); if (bn) { bn.querySelector('.bn').textContent = String(items.length); bn.classList.toggle('zero', !items.length); }
+  setBadge(items.length);
   body.innerHTML = html`<div class="sum-title sumrow" id="pubnotices"><span>TỔNG QUAN CẦN XỬ LÝ</span>${items.length ? '' : html`<span class="okpill">${icon('check', '1.1em')} Không có việc cần xử lý</span>`}</div>
     <div class="stats">
       <div class="stat wide rooms3"><div><b>${s.rooms}</b><span>Tổng số phòng</span></div><div><b>${s.rented}</b><span>Đang cho thuê</span></div><div><b>${s.closed}</b><span>Đang đóng</span></div></div>
