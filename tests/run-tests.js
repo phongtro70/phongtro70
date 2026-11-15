@@ -517,5 +517,15 @@ t('trước hạn 7 ngày: 1 việc "ghi điện nước" (gộp "sắp đến n
   B.addPayment(db, { invoiceId: inv.id, amount: B.remainingOf(db, inv), date: '2026-12-05', allMonths: true }, '2026-12-05');
   assert.equal(taskBreakdown(db, '2026-12-05').total, 0);
 });
+t('nhập trễ: khách vào 05/10, hôm nay 15/11 – chọn "khách mới, nhập trễ" thì tính từ tháng 10 và nhắc ghi điện nước tháng 11 (trễ)', () => {
+  const db = emptyDb(); const T = '2026-11-15';
+  const r = B.moveIn(db, { roomId: 'room-1', startDate: '2026-10-05', mode: 'late', rent: 2000000, elecPrice: 3500, waterPrice: 20000, initElec: 100, initWater: 10, tenant: person, paidAlready: true }, T);
+  assert.equal(r.invoice.periodStart, '2026-10-05'); assert.equal(B.remainingOf(db, r.invoice), 0);
+  const rem = buildReminders(db, T); assert.equal(rem[0].type, 'need_readings'); assert.equal(rem[0].dueDate, '2026-11-05'); assert.match(rem[0].label, /trễ 10 ngày/);
+  const i1 = B.createPeriodicInvoice(db, { rentalId: r.rental.id, periodIndex: 1, elecNew: 180, waterNew: 15, readDate: '2026-11-05' }, T);
+  assert.equal(i1.elec.amount, 280000); assert.equal(i1.total, 2000000 + 280000 + 100000); assert.equal(buildReminders(db, T)[0].type, 'overdue');
+  const db2 = emptyDb(); const r2 = B.moveIn(db2, { roomId: 'room-1', startDate: '2026-10-05', mode: 'existing', rent: 2000000, elecPrice: 3500, waterPrice: 20000, initElec: 100, initWater: 10, tenant: person, paidAlready: true }, T);
+  assert.equal(r2.invoice.periodStart, '2026-11-05'); // khách đã ở từ trước: chỉ tính từ kỳ đang chạy
+});
 console.log(`\nKết quả: ${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);
