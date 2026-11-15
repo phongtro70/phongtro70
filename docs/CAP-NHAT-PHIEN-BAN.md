@@ -1,3 +1,12 @@
+# Phiên bản 2026-12-01-a
+- **Thay đổi giá phòng**: hộp thoại hiện sẵn **Chỉ số điện ban đầu** và **Chỉ số nước ban đầu** của khách để sửa nếu lúc nhận phòng nhập nhầm. Chỉ sửa được khi khách **chưa có lần ghi điện nước nào** (sau đó ô bị khóa, kèm hướng dẫn). Chỉ sửa chỉ số mà giữ nguyên giá thì không tạo lịch sử đổi giá.
+- **Nút "Tải lại dữ liệu"** màu xanh tím dựng dọc ở **cạnh phải màn hình**: bấm để lấy dữ liệu mới nhất khi máy/tab khác vừa nhập; giữ nguyên trang và vị trí đang xem.
+- **Tên ngân hàng / chủ tài khoản dài** tự xuống dòng, không tràn trang; trong ảnh hóa đơn JPG chữ tự thu nhỏ cho vừa.
+- **Báo Cáo Tiền Trọ chi tiết**: chọn **Xem theo tháng** hoặc **Xem theo phòng**. Mỗi dòng là một phòng trong một tháng: loại khoản thu (**Tiền phòng đầu kỳ khi vào ở** / Tiền phòng + điện nước / Trả phòng…), tiền phòng, tiền điện (số cũ → số mới × giá), tiền nước, khác / nợ cũ, tổng, **đã thu (kèm ngày thu)**, **còn thiếu** và trạng thái **Đã thu đủ / Thu một phần / Chưa thu**. Mỗi nhóm có dòng tổng. File Excel (CSV) xuất đúng các cột này.
+- **Số thông báo trên icon app** (giống icon Zalo/Messenger): Android/máy tính hiện ngay khi đã cài app; **iPhone/iPad** cần mở app bằng icon ở màn hình chính rồi bấm nút **"Bật số thông báo trên icon"** ở đầu trang và cho phép thông báo. Số cập nhật mỗi lần mở app hoặc bấm Tải lại dữ liệu.
+- **Nhắc cập nhật số điện thoại tạm**: số có **6 chữ số giống nhau liên tiếp** (0111111111, 222222…) của khách đang thuê hoặc người ở cùng hiện trong mục **"Cần cập nhật số điện thoại"** ở Tổng quan (có tính vào số thông báo). Bấm **Sửa số** để vào phòng sửa, hoặc **Số đúng** để không nhắc số đó nữa.
+- **Tiền Nợ Cũ** trong thông tin khách thuê (khi thêm khách, khi **Sửa thông tin người đăng ký**, và dòng **Tiền Nợ Cũ → Sửa** ở trang phòng): số tiền (mặc định 0), lý do nợ, ngày nợ (mặc định ngày nhập, đổi được). Số tiền cộng vào hóa đơn của khách, hiện trên hóa đơn kèm lý do và ngày. Chuyển phòng giữ nguyên thông tin này.
+
 # Phiên bản 2026-11-30-d
 - **Nhà 70 có 5 phòng + 1 phòng Chủ Nhà**: dữ liệu mới tạo 5 phòng (Phòng 1–5) và thẻ Chủ Nhà. Nếu dữ liệu cũ đã có Phòng 6, Phòng 7 tạo sẵn mà **còn trống và chưa từng có khách/hóa đơn/điện nước**, app tự bỏ 2 phòng đó (chỉ một lần). Phòng nào đã có dữ liệu thì giữ nguyên. Muốn thêm phòng sau này: **+ Thêm phòng** ở Tổng quan.
 
