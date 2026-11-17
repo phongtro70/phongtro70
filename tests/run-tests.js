@@ -527,5 +527,46 @@ t('nhập trễ: khách vào 05/10, hôm nay 15/11 – chọn "khách mới, nh�
   const db2 = emptyDb(); const r2 = B.moveIn(db2, { roomId: 'room-1', startDate: '2026-10-05', mode: 'existing', rent: 2000000, elecPrice: 3500, waterPrice: 20000, initElec: 100, initWater: 10, tenant: person, paidAlready: true }, T);
   assert.equal(r2.invoice.periodStart, '2026-11-05'); // khách đã ở từ trước: chỉ tính từ kỳ đang chạy
 });
+console.log('BẢN 2026-12-03-f: GHI CHÚ NỢ CŨ / TIỀN THU THÊM');
+t('Tính tiền: lưu lý do nợ cũ; Việc cần xử lý có ghi chú nợ cũ + tiền thu thêm; trang ngoài ẩn khi tắt hiện ghi chú', () => {
+  const { db, rental } = setup('2026-10-10', '2026-10-10', { paidAlready: true });
+  const inv = B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 1, elecNew: 150, waterNew: 15, manualDebt: 2900000, manualDebtNote: 'còn thiếu tiền phòng tháng 9', extras: [{ label: 'Sửa khóa', amount: 100000 }] }, '2026-11-10');
+  assert.equal(inv.manualDebtNote, 'còn thiếu tiền phòng tháng 9');
+  const it = buildReminders(db, '2026-11-10').find((x) => x.invoiceId === inv.id);
+  assert.deepEqual(it.notes.map((n) => [n.kind, n.amount, n.text]), [['debt', 2900000, 'còn thiếu tiền phòng tháng 9'], ['extra', 100000, 'Sửa khóa']]);
+  assert.ok(JSON.stringify(publicReminders(db, '2026-11-10')).includes('Sửa khóa'));
+  db.meta.publicShowTenant = false; const off = JSON.stringify(publicReminders(db, '2026-11-10')); assert.ok(!off.includes('Sửa khóa') && !off.includes('còn thiếu'), 'tắt thì không lộ ghi chú');
+  B.adjustInvoice(db, inv.id, { reason: 'thêm lý do', manualDebtNote: 'nợ tháng 8 và 9' }, '2026-11-10'); assert.equal(inv.manualDebtNote, 'nợ tháng 8 và 9'); assert.equal(inv.extras.length, 1);
+  B.addPayment(db, { invoiceId: inv.id, amount: inv.total }, '2026-11-11'); assert.ok(!buildReminders(db, '2026-11-11').some((x) => x.notes?.length), 'trả đủ thì hết ghi chú');
+});
+
+t('Nợ cũ đã nhập khi Tính tiền (chưa có lý do): mục Tiền Nợ Cũ nhập lại đúng số + lý do thì CHỈ gắn lý do, không cộng gấp đôi', () => {
+  const { db, rental } = setup('2026-10-20', '2026-10-20', { paidAlready: true });
+  const inv = B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 1, elecNew: 100, waterNew: 10, manualDebt: 2900000 }, '2026-11-17');
+  assert.equal(inv.total, 1200000 + 2900000); assert.ok(!inv.manualDebtNote);
+  B.setOldDebt(db, rental.id, { amount: 2900000, reason: 'Nợ tiền T9, T10, T11', date: '2026-11-17' }, '2026-11-17');
+  assert.equal(inv.manualDebt, 2900000, 'không được cộng thêm'); assert.equal(inv.total, 4100000); assert.match(inv.manualDebtNote, /Nợ tiền T9, T10, T11/);
+  const it = buildReminders(db, '2026-11-17').find((x) => x.invoiceId === inv.id); assert.ok(it.notes.some((n) => n.kind === 'debt' && n.text.includes('T9, T10, T11')));
+});
+t('Ghi chú hóa đơn do chủ nhà gõ hiện dưới Việc cần xử lý; ghi chú tự động của hệ thống thì không', () => {
+  const { db, rental } = setup('2026-10-20', '2026-10-20', { paidAlready: true });
+  const inv = B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 1, elecNew: 110, waterNew: 10, note: 'Khách hẹn trả cuối tháng' }, '2026-11-17');
+  const it = buildReminders(db, '2026-11-17').find((x) => x.invoiceId === inv.id); assert.deepEqual(it.notes, [{ kind: 'note', amount: 0, text: 'Khách hẹn trả cuối tháng' }]);
+});
+
+t('Sửa nợ cũ & tiền thu thêm: đổi số tiền + ghi chú, lưu lịch sử trước → sau; chặn khi thiếu ghi chú / thấp hơn số đã trả / hóa đơn đã chốt', () => {
+  const { db, rental } = setup('2026-10-20', '2026-10-20', { paidAlready: true });
+  const inv = B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 1, elecNew: 100, waterNew: 10, manualDebt: 2900000, manualDebtNote: 'Nợ T9', extras: [{ label: 'Sửa khóa', amount: 100000 }] }, '2026-11-17');
+  B.editCharges(db, inv.id, { manualDebt: 2000000, manualDebtNote: 'Nợ tiền T9, T10', extras: [{ label: 'Sửa khóa', amount: 150000 }, { label: 'Internet', amount: 50000 }], reason: 'khách trả bớt' }, '2026-11-17');
+  assert.equal(inv.total, 1200000 + 2000000 + 200000); assert.equal(inv.manualDebtNote, 'Nợ tiền T9, T10');
+  const h = inv.chargeHistory[0]; assert.equal(h.before.manualDebt, 2900000); assert.equal(h.after.manualDebt, 2000000); assert.equal(h.before.extras.length, 1); assert.equal(h.after.extras.length, 2); assert.equal(h.reason, 'khách trả bớt');
+  throwsCode(() => B.editCharges(db, inv.id, { manualDebt: 100, manualDebtNote: '', extras: [], reason: 'x' }, '2026-11-17'), 'BAD_REQUEST');
+  throwsCode(() => B.editCharges(db, inv.id, { manualDebt: 0, extras: [{ label: '', amount: 5 }], reason: 'x' }, '2026-11-17'), 'BAD_REQUEST');
+  B.addPayment(db, { invoiceId: inv.id, amount: 3000000 }, '2026-11-17');
+  throwsCode(() => B.editCharges(db, inv.id, { manualDebt: 0, extras: [], reason: 'x' }, '2026-11-17'), 'BELOW_PAID');
+  const inv2 = B.createPeriodicInvoice(db, { rentalId: rental.id, periodIndex: 2, elecNew: 110, waterNew: 11 }, '2026-12-20');
+  throwsCode(() => B.editCharges(db, inv.id, { manualDebt: 0, extras: [], reason: 'x' }, '2026-12-20'), 'LOCKED'); assert.ok(inv2);
+});
+
 console.log(`\nKết quả: ${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);
