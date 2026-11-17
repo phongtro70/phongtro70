@@ -18,9 +18,20 @@ export function billModel(i, x, bank = null, qr = null) {
   const co = i.kind === 'checkout' && i.actualRent !== undefined; // hóa đơn trả phòng (bản mới): Tiền phòng = số ngày ở × giá/ngày, không còn dòng âm "trừ tiền thuê"
   if (co) calc.push({ label: 'Tiền phòng', formula: `${n(i.daysUsed)} ngày × ${n(Math.round(i.rentPerDay))} đ/ngày (giá thuê ${n(i.monthRent)} đ ÷ 30 ngày)`, amount: i.actualRent });
   else if (i.rent) calc.push({ label: 'Tiền phòng', formula: i.kind === 'periodic' && !i.elec ? 'Kỳ đầu (chưa có điện nước)' : '', amount: i.rent });
-  const debt = co ? Math.max(0, i.carryNet || 0) : (i.oldDebt || 0) + (i.manualDebt || 0); if (debt) { const months = (i.oldDebtMonths || []).map((x) => `Còn nợ tháng ${Number(x.ym.slice(5))}/${x.ym.slice(0, 4)}: ${n(x.amount)} đ`); const f = co ? ['Các khoản chưa thanh toán trước đó'] : [...(months.length ? months : i.oldDebt ? ['Các tháng trước chưa thanh toán'] : []), ...(i.manualDebt ? [`${i.manualDebtNote ? `Tiền nợ cũ (${i.manualDebtNote})` : 'Nợ nhập thêm'}: ${n(i.manualDebt)} đ`] : [])]; calc.push({ label: 'Nợ cũ', formula: f.join('\n'), amount: debt }); }
+  const debt = co ? Math.max(0, i.carryNet || 0) : (i.oldDebt || 0) + (i.manualDebt || 0);
+  if (debt) {
+    const months = (i.oldDebtMonths || []).map((x) => `Còn nợ tháng ${Number(x.ym.slice(5))}/${x.ym.slice(0, 4)}: ${n(x.amount)} đ`);
+    // Nợ cũ nhập tay: luôn ghi kèm GHI CHÚ (lý do) cho khách hiểu khoản này
+    // Chỉ có nợ nhập tay: dòng dưới "Nợ cũ" là chính ghi chú (vd "Ghi chú: Nợ tiền T9, T10, T11"), không lặp lại số tiền.
+    // Có cả nợ các tháng trước: ghi rõ số tiền nợ nhập thêm ngay trong dòng ghi chú để khách phân biệt.
+    const why = i.manualDebtNote || 'chưa ghi lý do (bấm Điều chỉnh để thêm)';
+    const manual = i.manualDebt ? [(months.length || i.oldDebt) ? `Ghi chú (nợ thêm ${n(i.manualDebt)} đ): ${why}` : `Ghi chú: ${why}`] : [];
+    const f = co ? ['Các khoản chưa thanh toán trước đó'] : [...(months.length ? months : i.oldDebt ? ['Các tháng trước chưa thanh toán'] : []), ...manual];
+    calc.push({ label: 'Nợ cũ', formula: f.join('\n'), amount: debt, debt: true });
+  }
   if (!co) for (const l of i.adjustLines || []) calc.push({ label: l.label, formula: '', amount: l.amount });
-  for (const e of i.extras || []) calc.push({ label: e.label === 'Chi phí khác' ? 'Chi phí khác' : `Chi phí khác: ${e.label}`, formula: '', amount: e.amount }); // không có thì không hiện dòng nào
+  // Tiền thu thêm (phát sinh): chữ màu đỏ + ghi chú nội dung khoản thu. Không có thì không hiện dòng nào
+  for (const e of i.extras || []) calc.push({ label: e.amount < 0 ? 'Giảm trừ' : 'Tiền thu thêm', formula: `Ghi chú: ${e.label && e.label !== 'Chi phí khác' ? e.label : 'Chi phí khác'}`, amount: e.amount, red: e.amount > 0 });
   const dep = co ? i.depositApplied || 0 : 0; if (co && ((i.carryNet || 0) < 0 || dep > 0)) { calc.push({ label: 'Cộng các khoản', formula: '', amount: i.total - Math.min(i.carryNet || 0, 0) + dep }); if ((i.carryNet || 0) < 0) calc.push({ label: 'Trừ: đã thu trước (tiền phòng đầu kỳ)', formula: '', amount: i.carryNet }); if (dep > 0) calc.push({ label: 'Trừ: tiền đặt cọc đã nhận', formula: 'Hoàn lại cho khách khi trả phòng: cọc dùng để bù các khoản trên, phần dư trả lại khách', amount: -dep }); }
   const totalLabel = co ? (i.total < 0 ? 'Chủ nhà hoàn lại cho khách' : 'Khách còn phải trả') : i.total < 0 ? 'Chủ nhà hoàn lại cho khách' : `Tổng tiền ${i.roomName.toLowerCase()} là`;
   const foot = []; if (i.total > 0 && (x.paid > 0 || x.remaining > 0)) foot.push(['Đã thanh toán trước', vnd(x.paid)], ['Còn nợ', vnd(x.remaining), true]);
@@ -31,40 +42,43 @@ export function billModel(i, x, bank = null, qr = null) {
 
 // ---- Vẽ ảnh JPG ----
 const FONT = '"SVN-Avo","Inter",-apple-system,"Segoe UI",Roboto,sans-serif';
+const RED = '#c42a1d';
 async function fonts() { try { await Promise.all(['400', '600', '700'].map((w) => document.fonts.load(`${w} 30px Inter`))); await document.fonts.ready; } catch { /* dùng font hệ thống */ } }
 function rr(c, x, y, w, h, r, fill) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); c.fillStyle = fill; c.fill(); }
+// Khối chuyển khoản: tên ngân hàng / số tài khoản / chủ tài khoản ở TRÊN (đủ rộng, không tràn), mã QR ở DƯỚI, canh giữa
+const QS = 260; const bankH = (m, hasQ) => 64 + (m.pay ? m.pay.length * 54 : 0) + (hasQ ? QS + 30 : 0) + 10;
 export async function renderBill(m) {
   await fonts();
   const W = 1080, P = 64, IW = W - P * 2;
-  // bố cục: tính chiều cao trước
-  let h = P + 130; h += m.info.length * 58 + 20; h += m.meters.length ? m.meters.length * 62 + 20 : 0; h += m.calc.reduce((s, r) => s + 78 + (r.formula ? r.formula.split(String.fromCharCode(10)).length * 38 - 4 : 0), 0) + 30; h += 150; h += m.foot.reduce((s, r) => s + (r[2] ? 84 : 58), 0); h += m.pay || m.qr ? (m.qr ? 340 : 250) : 0; h += 120;
   let qrImg = null; if (m.qr) { try { const r = await fetch(m.qr, { credentials: 'same-origin' }); qrImg = await createImageBitmap(await r.blob()); } catch { /* không tải được QR thì bỏ qua */ } }
+  // bố cục: tính chiều cao trước
+  let h = P + 130; h += m.info.length * 58 + 20; h += m.meters.length ? m.meters.length * 62 + 20 : 0; h += m.calc.reduce((s, r) => s + 78 + (r.formula ? r.formula.split(String.fromCharCode(10)).length * 38 - 4 : 0), 0) + 30; h += 150; h += m.foot.reduce((s, r) => s + (r[2] ? 84 : 58), 0); h += m.pay || qrImg ? bankH(m, !!qrImg) + 28 : 0; h += 120;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = h; const c = cv.getContext('2d');
   c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, h); rr(c, 24, 24, W - 48, h - 48, 40, '#f5f7fa');
   let y = P + 6; c.textBaseline = 'alphabetic';
   c.fillStyle = '#007aff'; c.font = `700 46px ${FONT}`; c.textAlign = 'center';
   // tiêu đề tự xuống dòng nếu dài
   const words = m.title.split(' '); let line = '', lines = []; for (const w of words) { const t = line ? `${line} ${w}` : w; if (c.measureText(t).width > IW) { lines.push(line); line = w; } else line = t; } lines.push(line);
-  lines.forEach((l, k) => c.fillText(l, W / 2, y + 46 + k * 56)); y += 46 + lines.length * 56 + 24; if (lines.length > 1) h += 0;
+  lines.forEach((l, k) => c.fillText(l, W / 2, y + 46 + k * 56)); y += 46 + lines.length * 56 + 24;
   c.strokeStyle = '#d9dee5'; c.lineWidth = 2; c.beginPath(); c.moveTo(P, y); c.lineTo(W - P, y); c.stroke(); y += 22;
-  const kv = (k, v, bold = false, red = false) => { const big = red ? 1.45 : 1; c.textAlign = 'left'; c.fillStyle = red ? '#c42a1d' : '#6c6c70'; c.font = `${red ? 800 : 400} ${Math.round(32 * big)}px ${FONT}`; c.fillText(k, P, y + 36 * big + (red ? 4 : 0)); c.textAlign = 'right'; c.fillStyle = red ? '#c42a1d' : '#1c1c1e'; c.font = `${red || bold ? 800 : 600} ${Math.round(34 * big)}px ${FONT}`; c.fillText(v, W - P, y + 36 * big + (red ? 4 : 0)); y += Math.round(58 * big); };
+  const kv = (k, v, bold = false, red = false) => { const big = red ? 1.45 : 1; c.textAlign = 'left'; c.fillStyle = red ? RED : '#6c6c70'; c.font = `${red ? 800 : 400} ${Math.round(32 * big)}px ${FONT}`; c.fillText(k, P, y + 36 * big + (red ? 4 : 0)); c.textAlign = 'right'; c.fillStyle = red ? RED : '#1c1c1e'; c.font = `${red || bold ? 800 : 600} ${Math.round(34 * big)}px ${FONT}`; c.fillText(v, W - P, y + 36 * big + (red ? 4 : 0)); y += Math.round(58 * big); };
   for (const [k, v] of m.info) kv(k, v);
   if (m.meters.length) { y += 10; for (const [a, b] of m.meters) { c.textAlign = 'left'; c.fillStyle = '#6c6c70'; c.font = `400 32px ${FONT}`; c.fillText(a[0], P, y + 38); c.fillStyle = '#1c1c1e'; c.font = `700 36px ${FONT}`; c.fillText(a[1], P + 250, y + 38); c.fillStyle = '#6c6c70'; c.font = `400 32px ${FONT}`; c.fillText(b[0], P + 480, y + 38); c.fillStyle = '#1c1c1e'; c.font = `700 36px ${FONT}`; c.fillText(b[1], P + 730, y + 38); y += 62; } y += 10; }
   y += 8;
   for (const r of m.calc) {
-    const fl = r.formula ? r.formula.split(String.fromCharCode(10)) : []; const hh = 66 + (fl.length ? fl.length * 38 - 4 : 0); rr(c, P - 16, y, IW + 32, hh, 14, r.info ? '#eef3fb' : '#ffffff');
-    c.textAlign = 'left'; c.fillStyle = '#1c1c1e'; c.font = `600 33px ${FONT}`; let lab = r.label; while (c.measureText(lab).width > IW - 330 && lab.length > 6) lab = lab.slice(0, -2); if (lab !== r.label) lab += '…'; c.fillText(lab, P, y + 44);
-    c.textAlign = 'right'; c.font = `700 36px ${FONT}`; c.fillStyle = r.info ? '#6c6c70' : r.amount < 0 ? '#1f8a3b' : '#1c1c1e'; c.fillText(r.info ? `(${m.money(r.amount)})` : m.money(r.amount), W - P, y + 44);
-    fl.forEach((ln, k) => { c.textAlign = 'left'; c.fillStyle = '#6c6c70'; c.font = `400 28px ${FONT}`; let t = ln; while (c.measureText(t).width > IW - 20 && t.length > 8) t = t.slice(0, -2); c.fillText(t === ln ? t : t + '…', P, y + 82 + k * 38); });
+    const fl = r.formula ? r.formula.split(String.fromCharCode(10)) : []; const hh = 66 + (fl.length ? fl.length * 38 - 4 : 0); rr(c, P - 16, y, IW + 32, hh, 14, r.red ? '#fff1ef' : r.info ? '#eef3fb' : '#ffffff');
+    c.textAlign = 'left'; c.fillStyle = r.red ? RED : '#1c1c1e'; c.font = `${r.red ? 700 : 600} 33px ${FONT}`; let lab = r.label; while (c.measureText(lab).width > IW - 330 && lab.length > 6) lab = lab.slice(0, -2); if (lab !== r.label) lab += '…'; c.fillText(lab, P, y + 44);
+    c.textAlign = 'right'; c.font = `700 36px ${FONT}`; c.fillStyle = r.red ? RED : r.info ? '#6c6c70' : r.amount < 0 ? '#1f8a3b' : '#1c1c1e'; c.fillText(r.info ? `(${m.money(r.amount)})` : m.money(r.amount), W - P, y + 44);
+    fl.forEach((ln, k) => { c.textAlign = 'left'; c.fillStyle = r.red || (r.debt && ln.startsWith('Ghi chú')) ? RED : '#6c6c70'; c.font = `${r.red || (r.debt && ln.startsWith('Ghi chú')) ? 600 : 400} 28px ${FONT}`; let t = ln; while (c.measureText(t).width > IW - 20 && t.length > 8) t = t.slice(0, -2); c.fillText(t === ln ? t : t + '…', P, y + 82 + k * 38); });
     y += hh + 12;
   }
   y += 18; rr(c, P - 16, y, IW + 32, 124, 28, '#007aff'); c.textAlign = 'left'; c.fillStyle = '#ffffff'; c.font = `600 32px ${FONT}`; c.fillText(m.total.label, P + 8, y + 52); c.textAlign = 'right'; c.font = `700 52px ${FONT}`; c.fillText(m.total.value, W - P - 8, y + 100); y += 124 + 26;
   for (const [k, v, red] of m.foot) kv(k, v, red, red);
   if (m.pay || qrImg) {
-    const hasQ = !!qrImg; const bh = hasQ ? 320 : 214; y += 8; rr(c, P - 16, y, IW + 32, bh, 14, '#ffffff'); c.textAlign = 'left'; c.fillStyle = '#007aff'; c.font = `700 28px ${FONT}`; c.fillText(m.pay ? 'THÔNG TIN CHUYỂN KHOẢN' : 'QUÉT MÃ QR ĐỂ CHUYỂN KHOẢN', P + 8, y + 46);
-    const rightEdge = hasQ ? W - P - 8 - 250 : W - P - 8; let yy = y + 50;
-    if (m.pay) for (const [k, v] of m.pay) { c.textAlign = 'left'; c.fillStyle = '#6c6c70'; c.font = `400 30px ${FONT}`; c.fillText(k, P + 8, yy + 42); c.textAlign = 'right'; c.fillStyle = '#1c1c1e'; let fs = 32; c.font = `700 ${fs}px ${FONT}`; while (fs > 20 && c.measureText(String(v)).width > rightEdge - P - 200) { fs -= 2; c.font = `700 ${fs}px ${FONT}`; } let vv = String(v); while (c.measureText(vv).width > rightEdge - P - 200 && vv.length > 6) vv = vv.slice(0, -2); if (vv !== String(v)) vv += '…'; c.fillText(vv, rightEdge, yy + 42); yy += 52; }
-    if (hasQ) { const qs = 230; const qx = m.pay ? W - P - 8 - qs : Math.round((W - qs) / 2); const qy = y + 64; c.fillStyle = '#fff'; c.fillRect(qx - 6, qy - 6, qs + 12, qs + 12); const sc = Math.min(qs / qrImg.width, qs / qrImg.height); const dw = qrImg.width * sc, dh = qrImg.height * sc; c.drawImage(qrImg, qx + (qs - dw) / 2, qy + (qs - dh) / 2, dw, dh); }
+    const hasQ = !!qrImg; const bh = bankH(m, hasQ); y += 8; rr(c, P - 16, y, IW + 32, bh, 14, '#ffffff'); c.textAlign = 'left'; c.fillStyle = '#007aff'; c.font = `700 28px ${FONT}`; c.fillText(m.pay ? 'THÔNG TIN CHUYỂN KHOẢN' : 'QUÉT MÃ QR ĐỂ CHUYỂN KHOẢN', P + 8, y + 46);
+    let yy = y + 56; const right = W - P - 8; const labW = 240;
+    if (m.pay) for (const [k, v] of m.pay) { c.textAlign = 'left'; c.fillStyle = '#6c6c70'; c.font = `400 30px ${FONT}`; c.fillText(k, P + 8, yy + 40); c.textAlign = 'right'; c.fillStyle = '#1c1c1e'; let fs = 34; c.font = `700 ${fs}px ${FONT}`; const maxW = right - (P + 8 + labW); while (fs > 22 && c.measureText(String(v)).width > maxW) { fs -= 2; c.font = `700 ${fs}px ${FONT}`; } let vv = String(v); while (c.measureText(vv).width > maxW && vv.length > 6) vv = vv.slice(0, -2); if (vv !== String(v)) vv += '…'; c.fillText(vv, right, yy + 40); yy += 54; }
+    if (hasQ) { const qx = Math.round((W - QS) / 2); const qy = yy + 14; c.fillStyle = '#fff'; c.fillRect(qx - 6, qy - 6, QS + 12, QS + 12); c.strokeStyle = '#d9dee5'; c.lineWidth = 2; c.strokeRect(qx - 6, qy - 6, QS + 12, QS + 12); const sc = Math.min(QS / qrImg.width, QS / qrImg.height); const dw = qrImg.width * sc, dh = qrImg.height * sc; c.drawImage(qrImg, qx + (QS - dw) / 2, qy + (QS - dh) / 2, dw, dh); }
     y += bh + 20;
   }
   c.textAlign = 'center'; c.fillStyle = '#8e8e93'; c.font = `400 26px ${FONT}`; c.fillText('Phòng Trọ 70 Hoàng Sâm – cảm ơn quý khách', W / 2, Math.min(h - 56, y + 56));

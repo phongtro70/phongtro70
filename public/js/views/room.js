@@ -7,6 +7,7 @@ import { ownerView } from './owner.js';
 import { downloadCt01 } from '../ct01.js';
 import { billArticle } from './bill.js';
 import { backupCccd } from '../cccd-backup.js';
+import { chargeHistoryHtml } from './invoice.js';
 
 let year = null;
 // Chỉ xóa được hóa đơn MỚI NHẤT của khách đang thuê (không phải hóa đơn đầu tiên, không phải trả phòng/chuyển phòng)
@@ -57,11 +58,12 @@ export function roomView(id) {
         <dt>Ngày vào ở</dt><dd><b>${dmy(r.startDate)}</b> <button class="btn sm edit-date" data-act="edit-start" data-id="${r.id}">${icon('edit', '1em')} Sửa ngày</button></dd>
         <dt>Số người ở</dt><dd><b>${1 + occs.length} người</b></dd><dt>Kỳ tiếp theo đến hạn</dt><dd><b>${dmy(rd.nextDue)}</b></dd>${t.note ? html`<dt>Ghi chú về khách</dt><dd>${t.note}</dd>` : ''}</dl>
       <dl class="kv"><dt>Giá thuê / điện / nước</dt><dd>${vnd(rd.price.rent)} · ${num(rd.price.elecPrice)}đ/số · ${num(rd.price.waterPrice)}đ/khối</dd><dt>Tiền đặt cọc</dt><dd>${vnd(r.deposit || 0)}${r.deposit ? html` <span class="muted small">· hoàn lại khi trả phòng</span>` : ''}</dd><dt>Hình thức thanh toán</dt><dd>${{ month: 'Theo tháng', quarter: 'Theo quý', year: 'Theo năm' }[r.payCycle || 'month']}</dd><dt>Hóa đơn mới nhất</dt><dd>${inv.code} · ${vnd(inv.total)}</dd>${oldDebtKv(r)}${inv.elec || r.status !== 'active' ? html`<dt>Tổng còn nợ</dt><dd class="${d.remaining ? 'owe' : 'okc'}">${vnd(d.remaining)}</dd>` : rentRem(inv, d) > 0 ? html`<dt>Tiền phòng đầu kỳ chưa nhận</dt><dd class="okc">${vnd(rentRem(inv, d))}</dd>` : html`<dt>Tiền phòng đầu kỳ đã nhận</dt><dd class="okc">${vnd(Math.min(d.paid, inv.rent))}</dd>`}</dl>
-      <div class="row" style="margin-top:12px"><button class="btn red" data-act="readings" data-id="${r.id}">${icon('bolt', '1.15em')} Tính tiền (ghi điện nước)</button>${d.remaining > 0 ? html`<button class="btn green" data-act="pay" data-id="${inv.id}">${icon('money', '1.15em')} Thanh toán</button>` : ''}<button class="btn" data-act="price" data-id="${r.id}">${icon('money', '1.1em')} Thay đổi giá phòng</button><button class="btn" data-act="transfer" data-id="${r.id}">${icon('swap', '1.1em')} Chuyển phòng</button><button class="btn danger" data-act="checkout" data-id="${r.id}">Trả phòng</button></div></section>
+      <div class="row" style="margin-top:12px"><button class="btn red" data-act="readings" data-id="${r.id}">${icon('bolt', '1.15em')} Tính tiền (ghi điện nước)</button>${d.remaining > 0 ? html`<button class="btn green" data-act="pay" data-id="${inv.id}">${icon('money', '1.15em')} Thanh toán</button>` : ''}${inv.kind === 'periodic' ? html`<button class="btn red" data-act="edit-charges" data-id="${inv.id}">${icon('edit', '1.1em')} Sửa nợ cũ / tiền thu thêm</button>` : ''}<button class="btn" data-act="price" data-id="${r.id}">${icon('money', '1.1em')} Thay đổi giá phòng</button><button class="btn" data-act="transfer" data-id="${r.id}">${icon('swap', '1.1em')} Chuyển phòng</button><button class="btn danger" data-act="checkout" data-id="${r.id}">Trả phòng</button></div></section>
       ${!counted && rentRem(inv, d) > 0 ? html`<section class="card" style="margin-top:12px"><h3>${icon('info', '1.2em')} Tiền phòng kỳ đầu chưa ghi nhận đã thu</h3><p class="muted" style="margin:6px 0 10px">Chưa tới kỳ ghi điện nước nên chưa tính là nợ. Nếu bạn đã nhận tiền phòng khi khách vào, hãy ghi nhận để hệ thống không tính là nợ cũ.</p><div class="row"><button class="btn" data-act="open-invoice" data-id="${inv.id}">Xem hóa đơn</button><button class="btn green" data-act="pay-month" data-id="${inv.id}">${icon('check', '1.1em')} Ghi nhận đã thu tiền phòng đầu kỳ (${vnd(rentRem(inv, d))})</button></div></section>` : html`<section class="card" style="margin-top:12px"><h3>${unpaid.length ? icon('alert', '1.2em') : icon('check', '1.2em')} ${unpaid.length ? 'Chưa thanh toán' : 'Đã thanh toán đủ các tháng'}</h3>${!counted && d.remaining > rentRem(inv, d) ? html`<p class="warn-box" style="margin:8px 0">Còn <b>Tiền Nợ Cũ ${vnd(d.remaining - rentRem(inv, d))}</b> chưa thu. Khoản này nằm trong hóa đơn hiện tại và sẽ được nhắc nợ từ kỳ ghi điện nước tới (thu sớm thì bấm <b>Thanh toán</b>).</p>` : ''}
         ${unpaid.length ? html`<div class="month-pay">${unpaid.map((m) => html`<div class="mp"><b>${t.fullName} – Tháng ${Number(m.ym.slice(5))}/${m.ym.slice(0, 4)}</b><span class="sp muted">đến hạn ${dmy(m.dueDate)} · còn <b class="owe">${vnd(m.outstanding)}</b></span><button class="btn sm" data-act="open-invoice" data-id="${m.invoiceId}">Xem hóa đơn</button><button class="btn red sm" data-act="pay-month" data-id="${m.invoiceId}">Thanh toán tháng ${Number(m.ym.slice(5))}</button></div>`)}</div><p class="muted small" style="margin:8px 0 0">Bấm vào từng tháng để thu tiền đúng tháng đó. Sau khi bấm <b>ĐÃ NHẬN TIỀN</b>, thông báo của tháng đó sẽ ẩn.</p>` : ''}</section>`}`
     : html`<section class="card">${rm.status === 'empty' ? html`<p style="margin-top:0">Phòng đang trống.</p><button class="btn primary" data-act="movein" data-id="${id}">${icon('plus', '1.1em')} Thêm khách thuê</button>` : html`<p style="margin:0">${rm.note || ROOM_STATUS[rm.status]}</p>`}</section>`}
     ${r ? occupantsCard(t, occs, r.roomId) : ''}
+    ${(() => { const h = chargeHistoryHtml(D().invoices.filter((x) => x.roomId === id)); return h ? html`<section class="card" style="margin-top:12px">${h}</section>` : ''; })()}
     <div class="page-head" style="margin-top:22px"><h2 style="font-size:1.1rem">Hóa đơn theo tháng</h2><select data-change="year" style="width:auto;min-height:40px">${[...new Set([year, Number(today().slice(0, 4)), ...D().invoices.map((i) => Number(i.dueDate.slice(0, 4)))])].sort((a, b) => b - a).map((y) => html`<option ${y === year ? raw('selected') : ''}>${y}</option>`)}</select></div>
     <table class="tbl stack"><thead><tr><th>Tháng</th><th class="r">Tiền phòng</th><th class="r">Tiền điện</th><th class="r">Tiền nước</th><th class="r">Nợ cũ</th><th class="r">Tổng tiền tháng</th><th class="r">Đã thanh toán</th><th class="r">Còn nợ</th><th>Trạng thái</th><th>Ghi chú</th><th></th></tr></thead><tbody>${rows}</tbody></table>
     <h2 class="sec">Lịch sử thuê của phòng</h2>
@@ -176,9 +178,9 @@ acts.readings = (el) => {
     ${field('Ngày chốt số (ngày đọc đồng hồ)', html`<input type="date" name="readDate" value="${todayLocal()}" max="${todayLocal()}" required>`, 'Mặc định hôm nay; chọn đúng ngày đọc nếu ghi muộn.')}
     <div class="calc" id="rcalc">Nhập chỉ số mới để xem số tiền.</div>
     ${unpaidInfo}
-    <fieldset><legend>Nợ cũ & chi phí khác (nếu có – không có thì để trống)</legend>
-      <div class="two keep">${field('Nợ cũ (đ)', html`<input name="manualDebt" inputmode="numeric" placeholder="0">`)}<div></div></div>
-      <div class="two keep">${field('Chi phí khác (đ)', html`<input name="otherAmount" inputmode="numeric" placeholder="0">`)}${field('Nội dung (tùy chọn)', html`<input name="otherLabel" maxlength="100" placeholder="Sửa khóa, internet…">`)}</div>
+    <fieldset><legend>Nợ cũ & tiền thu thêm (nếu có – không có thì để trống)</legend>
+      <div class="two keep">${field('Nợ cũ (đ)', html`<input name="manualDebt" inputmode="numeric" placeholder="0">`)}${field('Lý do nợ cũ (bắt buộc khi có nợ)', html`<input name="manualDebtNote" maxlength="200" placeholder="Ví dụ: còn thiếu tiền phòng tháng 10">`)}</div>
+      <div class="two keep">${field('Tiền thu thêm (đ)', html`<input name="otherAmount" inputmode="numeric" placeholder="0">`)}${field('Ghi chú thu thêm (bắt buộc khi có tiền)', html`<input name="otherLabel" maxlength="100" placeholder="Ví dụ: sửa khóa, internet, rác…">`)}</div>
       <p class="muted small" style="margin:0 0 10px">Khoản nào có nhập mới hiện trong hóa đơn của khách; để trống thì hóa đơn không hiện dòng đó.</p></fieldset>
     ${field('Ghi chú hóa đơn', html`<input name="note" maxlength="300">`)}<div class="err-inline"></div><button class="btn red block" type="submit">LƯU CHỈ SỐ & LẬP HÓA ĐƠN</button></form>`);
 };
@@ -191,8 +193,12 @@ live.readings = (f) => {
   box.innerHTML = html`Điện: <b>${num(e - d.be)}</b> số × ${num(d.pe)} = <b>${vnd(ea)}</b><br>Nước: <b>${num(w - d.bw)}</b> khối × ${num(d.pw)} = <b>${vnd(wa)}</b><br>Tiền phòng kỳ mới: ${vnd(d.rent)}<br><i class="muted small">Ước tính; nợ cũ và đơn giá chính xác được hệ thống chốt khi lưu.</i>`.s;
 };
 forms.readings = async (f, fd) => {
-  const oa = toInt(fd.get('otherAmount')); const extras = oa ? [{ label: (fd.get('otherLabel') || '').trim() || 'Chi phí khác', amount: oa }] : [];
-  const j = await save('POST', 'readings', { rentalId: f.dataset.rental, periodIndex: Number(fd.get('periodIndex')), elecNew: toDec(fd.get('elecNew')), waterNew: toDec(fd.get('waterNew')), readDate: fd.get('readDate'), manualDebt: toInt(fd.get('manualDebt')) || 0, extras, note: fd.get('note') }, 'Đã lập hóa đơn');
+  const debt = toInt(fd.get('manualDebt')) || 0; const debtNote = String(fd.get('manualDebtNote') || '').trim();
+  const oa = toInt(fd.get('otherAmount')) || 0; const oLabel = String(fd.get('otherLabel') || '').trim();
+  if (debt > 0 && !debtNote) throw new Error('Có nhập Nợ cũ thì hãy ghi Lý do nợ cũ (để khách hiểu khoản này).');
+  if (oa && !oLabel) throw new Error('Có nhập Tiền thu thêm thì hãy ghi Ghi chú thu thêm (thu tiền gì).');
+  const extras = oa ? [{ label: oLabel, amount: oa }] : [];
+  const j = await save('POST', 'readings', { rentalId: f.dataset.rental, periodIndex: Number(fd.get('periodIndex')), elecNew: toDec(fd.get('elecNew')), waterNew: toDec(fd.get('waterNew')), readDate: fd.get('readDate'), manualDebt: debt, manualDebtNote: debt > 0 ? debtNote : '', extras, note: fd.get('note') }, 'Đã lập hóa đơn');
   closeModal(); go(`#/invoice/${j.result.id}`);
 };
 
@@ -359,13 +365,18 @@ export function oldDebtFields(od) {
     ${field('Lý do nợ', html`<input name="od_reason" maxlength="200" value="${od.reason || ''}" placeholder="Ví dụ: còn thiếu tiền phòng tháng trước">`)}</fieldset>`;
 }
 export const collectOldDebt = (fd) => ({ amount: toInt(fd.get('od_amount')) || 0, reason: fd.get('od_reason') || '', date: fd.get('od_date') || todayLocal() });
+// Tiền nợ cũ hiện tại của khách: đã nhập ở mục Tiền Nợ Cũ, hoặc nợ cũ nhập tay trên hóa đơn mới nhất (ô "Nợ cũ" khi Tính tiền)
+export function effOldDebt(r) {
+  if (r.oldDebtInfo) return r.oldDebtInfo;
+  const L = latestInvOf(r.chainId); return L && L.manualDebt > 0 ? { amount: L.manualDebt, reason: L.manualDebtNote || '', date: L.issuedDate || L.dueDate } : null;
+}
 function oldDebtKv(r) {
-  const od = r.oldDebtInfo; const btn = r.status === 'active' ? html` <button class="btn sm" data-act="old-debt" data-id="${r.id}">${icon('edit', '1em')} ${od?.amount ? 'Sửa' : 'Nhập'}</button>` : '';
+  const od = effOldDebt(r); const L = latestInvOf(r.chainId); const btn = r.status === 'active' ? (L && L.kind === 'periodic' && L.manualDebt > 0 ? html` <button class="btn sm" data-act="edit-charges" data-id="${L.id}">${icon('edit', '1em')} Sửa</button>` : html` <button class="btn sm" data-act="old-debt" data-id="${r.id}">${icon('edit', '1em')} ${od?.amount ? 'Sửa' : 'Nhập'}</button>`) : '';
   return html`<dt>Tiền Nợ Cũ</dt><dd>${od?.amount ? html`<b class="owe">${vnd(od.amount)}</b><span class="muted small"> · ${od.reason || 'không ghi lý do'} · ngày ${dmy(od.date)}</span>` : html`<span class="muted">0 đ</span>`}${btn}</dd>`;
 }
 acts['old-debt'] = (el) => {
   const r = D().rentals.find((x) => x.id === el.dataset.id);
-  openModal(`Tiền Nợ Cũ – ${room(r.roomId).name}`, html`<form data-form="old-debt" data-rental="${r.id}">${oldDebtFields(r.oldDebtInfo)}<p class="small muted">Số tiền thay đổi được cộng (hoặc trừ) vào hóa đơn mới nhất của khách. Hóa đơn đã chốt trước đó không đổi.</p><div class="err-inline"></div><button class="btn primary block" type="submit">LƯU TIỀN NỢ CŨ</button></form>`);
+  openModal(`Tiền Nợ Cũ – ${room(r.roomId).name}`, html`<form data-form="old-debt" data-rental="${r.id}">${oldDebtFields(effOldDebt(r))}<p class="small muted">Chỉ muốn thêm lý do: giữ nguyên số tiền, điền <b>Lý do nợ</b> rồi bấm Lưu (không cộng thêm tiền). Số tiền thay đổi được cộng (hoặc trừ) vào hóa đơn mới nhất của khách. Hóa đơn đã chốt trước đó không đổi.</p><div class="err-inline"></div><button class="btn primary block" type="submit">LƯU TIỀN NỢ CŨ</button></form>`);
 };
 forms['old-debt'] = async (f, fd) => { await save('PUT', `rentals/${f.dataset.rental}/old-debt`, collectOldDebt(fd), 'Đã lưu tiền nợ cũ'); closeModal(); rerender(); };
 acts['cccd-backup-room'] = async (el) => { el.disabled = true; try { await backupCccd([el.dataset.room], room(el.dataset.room)?.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').replace(/[^A-Za-z0-9]+/g, '-') || 'phong'); } finally { el.disabled = false; } };

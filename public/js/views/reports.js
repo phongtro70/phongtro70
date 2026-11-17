@@ -29,7 +29,7 @@ function detailRow(d, by) {
   return html`<tr class="rp-${d.status}">${by === 'month' ? td('Phòng', html`<b>${d.room}</b><span class="rp-sub">${d.tenant}</span>`) : td('Tháng', html`<b>${monthLabel(d.ym)}</b><span class="rp-sub">${d.tenant}</span>`)}
     ${td('Khoản thu', html`<span class="rp-type ${d.type}">${TYPE[d.type] || d.type}</span><span class="rp-sub">Hạn thu ${dmy(d.dueDate)}</span>`)}
     ${td('Tiền phòng', vnd(d.rent), 'r')}${td('Tiền điện', meter(d.elec, 'số'), 'r')}${td('Tiền nước', meter(d.water, 'khối'), 'r')}
-    ${td('Khác / nợ cũ', other ? html`${vnd(other)}${d.oldDebtAdd ? html`<span class="rp-sub">Nợ cũ ${vnd(d.oldDebtAdd)}${d.oldDebtNote ? ` (${d.oldDebtNote})` : ''}</span>` : ''}${d.deposit ? html`<span class="rp-sub">Trừ cọc ${vnd(d.deposit)}</span>` : ''}` : html`<span class="muted">—</span>`, 'r')}
+    ${td('Khác / nợ cũ', other ? html`${vnd(other)}${d.oldDebtAdd ? html`<span class="rp-sub">Nợ cũ ${vnd(d.oldDebtAdd)}${d.oldDebtNote ? ` (${d.oldDebtNote})` : ''}</span>` : ''}${(d.extrasList || []).map((e) => html`<span class="rp-sub rp-xtra">Thu thêm ${vnd(e.amount)}: ${e.label}</span>`)}${d.deposit ? html`<span class="rp-sub">Trừ cọc ${vnd(d.deposit)}</span>` : ''}` : html`<span class="muted">—</span>`, 'r')}
     ${td('Tổng tiền', html`<b>${vnd(d.own)}</b>`, 'r')}${td('Đã thu', html`${vnd(d.paid)}${d.payDates.length ? html`<span class="rp-sub">ngày thu ${d.payDates.map((x) => dmy(x).slice(0, 5)).join(', ')}</span>` : ''}`, 'r okc')}
     ${td('Còn thiếu', vnd(d.outstanding), `r ${d.outstanding ? 'owe' : ''}`)}${td('Trạng thái', html`<span class="badge ${tone}">${st}</span>`)}</tr>`;
 }

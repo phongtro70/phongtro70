@@ -1,3 +1,12 @@
+# Phiên bản 2026-12-03-f
+- **Việc cần xử lý (Tổng quan và trang ngoài):** dưới dòng "Cần làm" hiện ghi chú **Nợ cũ (số tiền + lý do)** và **Thu thêm (số tiền + nội dung, chữ đỏ)**. Trang ngoài chỉ hiện khi bật "Hiện họ tên khách và ghi chú".
+- **Hóa đơn (màn hình + ảnh JPG):** dòng Nợ cũ có "Ghi chú: <lý do>"; tiền thu thêm là dòng riêng màu đỏ kèm "Ghi chú: <thu tiền gì>". Khối chuyển khoản: Ngân hàng / Số tài khoản / Chủ tài khoản ở trên, mã QR ở dưới canh giữa (điện thoại, iPad, máy tính như nhau).
+- **Tính tiền:** thêm ô "Lý do nợ cũ"; "Chi phí khác" đổi thành "Tiền thu thêm" + "Ghi chú thu thêm" (có tiền thì bắt buộc ghi chú). **Điều chỉnh:** sửa được lý do nợ cũ, giữ đủ các khoản thu thêm.
+- **Sửa nợ cũ & tiền thu thêm** (nút đỏ ở trang phòng và trang hóa đơn, hoặc nút **Sửa** cạnh Tiền Nợ Cũ): sửa số tiền và ghi chú nợ cũ; sửa / thêm / xóa từng khoản thu thêm kèm ghi chú; bắt buộc lý do sửa. **Lịch sử sửa** (thời gian, lý do, trước → sau, tổng hóa đơn) hiện ở trang phòng và trang hóa đơn. Chỉ sửa được hóa đơn mới nhất của khách (hóa đơn cũ đã chốt).
+- **Sửa lỗi nhân đôi nợ:** nợ cũ nhập ở ô "Nợ cũ" khi Tính tiền trước đây không hiện ở mục Tiền Nợ Cũ (hiện 0 đ); nếu nhập lại ở đó sẽ bị cộng gấp đôi. Nay mục Tiền Nợ Cũ hiện đúng số đang nợ, nhập lại chỉ gắn lý do. Lý do nhập ở Tiền Nợ Cũ cũng gắn vào hóa đơn đang chứa khoản nợ.
+- **Ghi chú hóa đơn** chủ nhà gõ khi Tính tiền cũng hiện dưới Việc cần xử lý.
+- **Báo Cáo Tiền Trọ:** luôn hiện tên khách / tên phòng mới nhất; sửa thông tin khách thì tên trên các hóa đơn cũ đổi theo; cột "Khác / nợ cũ" ghi rõ khoản thu thêm.
+
 # Phiên bản 2026-12-03-e
 - **Trang ngoài (chưa đăng nhập) giống trang quản lý**: cùng đầu trang (tên app 2 dòng, ngày dương / âm, sự kiện sắp tới, chuông, nút Đăng nhập), cùng thứ tự (Việc cần xử lý → Nhắc nợ → Sự kiện → Tổng quan → Nhắc ghi điện nước → Các phòng → Lịch → Điện nước), cùng màu thẻ phòng (xanh lá sáng + ổ khóa mở, phòng khóa xám), cùng cỡ chữ. Trang ngoài vẫn không có nút thao tác và không hiện thông tin riêng của khách (SĐT, CCCD, địa chỉ).
 

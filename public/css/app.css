@@ -546,3 +546,23 @@ h1.apptitle .t1,h1.apptitle .t2{display:block;line-height:1.1}h1.apptitle .t2{le
 .cal-lunar{white-space:nowrap}
 .note.task .t-note{color:var(--red-t,#c62828)!important;font-weight:800}
 @media(max-width:820px){.cal-head .cal-title{flex-wrap:nowrap!important}.cal-head .cal-sel{min-width:0;padding-left:8px;padding-right:8px}}
+/* ===== Bổ sung bản 2026-12-03-f ===== */
+/* Ghi chú dưới dòng "Cần làm": nợ cũ + tiền thu thêm */
+.note.task .t-notes,.note .t-notes{margin-top:6px;display:grid;gap:3px;font-size:1rem;line-height:1.4}
+.t-n{color:var(--ink)}.t-n b{white-space:nowrap}.t-n span{overflow-wrap:anywhere}
+.t-n.debt{color:#a85a00}.t-n.extra{color:#c42a1d;font-weight:600}
+@media(prefers-color-scheme:dark){.t-n.debt{color:#ffb347}.t-n.extra{color:#ff9188}}
+/* Hóa đơn: mỗi dòng chú thích một hàng; ghi chú nợ cũ / thu thêm màu đỏ */
+.bill .bf span{display:block}.bill .bf .bnote-red{color:#c42a1d;font-weight:700}
+.bill .bl.xtra{background:#fff1ef;border:1px solid rgb(229 57 43 / 35%)}.bill .bl.xtra .bl1,.bill .bl.xtra .bl1 b,.bill .bl.xtra .bf{color:#c42a1d}
+/* Khối chuyển khoản: Ngân hàng / Số tài khoản / Chủ tài khoản ở TRÊN (đủ rộng, không tràn chữ), mã QR ở DƯỚI, canh giữa – giống nhau trên điện thoại, iPad, máy tính */
+.bill .bbank.stack{display:block}
+.bill .bbank.stack .bbinfo{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;margin:10px 0 0;width:100%}
+.bill .bbank.stack .bbinfo dt{color:#6c6c70;white-space:nowrap}
+.bill .bbank.stack .bbinfo dd{margin:0;text-align:right;font-weight:800;font-size:1.05rem;white-space:normal!important;word-break:normal!important;overflow-wrap:break-word}
+.bill .bbank.stack .bqrwrap{display:flex;justify-content:center;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(60,60,67,.18)}
+.bill .bbank.stack .bqr{width:200px;height:200px;max-width:70vw;object-fit:contain;background:#fff;border-radius:10px;margin:0}
+@media(max-width:380px){.bill .bbank.stack .bbinfo{grid-template-columns:1fr}.bill .bbank.stack .bbinfo dd{text-align:left;margin-bottom:4px}}
+.rp-tbl .rp-sub.rp-xtra{color:#c42a1d;font-weight:600}
+.t-n.note{color:var(--ink);font-style:italic}
+.cx-row{align-items:end}.cx-l .btn{margin:-4px 0 12px}.chist .li{display:block}.chist .small{margin-top:3px}

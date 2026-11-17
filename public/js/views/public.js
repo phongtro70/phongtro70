@@ -23,6 +23,11 @@ export function todoText(it) {
   const months = it.months?.length ? it.months.map((x) => ym(x.ym + '-01')).join(', ') : ym(it.dueDate);
   return [`Thanh toán tháng ${months}${it.remaining ? ` – còn ${m$(it.remaining)}` : ''}`, it.type === 'overdue' ? 'quá hạn' : it.type === 'partial' ? 'đã trả một phần' : it.type === 'debt' ? 'có nợ cũ' : ''];
 }
+// Ghi chú dưới dòng "Cần làm": nợ cũ (kèm lý do) và tiền thu thêm (kèm nội dung, chữ đỏ)
+export function noteLines(notes) {
+  if (!notes?.length) return '';
+  return html`<div class="t-notes">${notes.map((x) => (x.kind === 'note' ? html`<div class="t-n note">Ghi chú: <span>${x.text}</span></div>` : html`<div class="t-n ${x.kind}">${x.kind === 'debt' ? 'Nợ cũ' : x.amount < 0 ? 'Giảm trừ' : 'Thu thêm'}: <b>${vnd(Math.abs(x.amount))}</b> <span>(${x.text || (x.kind === 'debt' ? 'chưa ghi lý do' : 'Chi phí khác')})</span></div>`))}</div>`;
+}
 export function taskCard(it, { actions = false, tenantName = '', pub = false } = {}) {
   const [todo, note] = todoText(it); const payType = ['overdue', 'debt', 'unpaid', 'partial', 'ended_debt'].includes(it.type);
   const btn = !actions ? '' : it.type === 'need_readings' && it.rentalId ? html`<button class="btn red sm rbtn" data-act="readings" data-id="${it.rentalId}">${icon('bolt', '1.1em')} Tính tiền</button>`
@@ -30,7 +35,7 @@ export function taskCard(it, { actions = false, tenantName = '', pub = false } =
   const open = pub && it.roomId ? raw(`data-act="pub-room" data-id="${esc(it.roomId)}" data-name="${esc(it.roomName)}" data-pay="${payType ? 1 : 0}"`) : !pub ? raw(`data-act="open-room" data-id="${esc(it.roomId)}"`) : '';
   return html`<article class="note task ${LEVEL[it.level] || ''} link" ${open}>
     <div class="t-line"><b class="t-room">${it.roomName}</b>${tenantName ? html` – <span class="t-name">${tenantName}</span>` : ''}</div>
-    <div class="t-todo">Cần làm: <b>${todo}</b> <span class="t-note">(${dmy(it.dueDate)}${note ? ` - ${note}` : ''})</span></div>${btn ? html`<div class="nact">${btn}</div>` : ''}</article>`;
+    <div class="t-todo">Cần làm: <b>${todo}</b> <span class="t-note">(${dmy(it.dueDate)}${note ? ` - ${note}` : ''})</span></div>${noteLines(it.notes)}${btn ? html`<div class="nact">${btn}</div>` : ''}</article>`;
 }
 export function noticeCard(it, { link = false, tenantName = '', actions = false, pub = false } = {}) {
   const per = it.period || it.periodLabel; const m$ = (n) => html`<span class="money">${vnd(n)}</span>`;
@@ -45,7 +50,7 @@ export function noticeCard(it, { link = false, tenantName = '', actions = false,
   const payType = ['overdue', 'debt', 'unpaid', 'partial', 'ended_debt'].includes(it.type);
   return html`<article class="note ${LEVEL[it.level] || ''} ${link || pub ? 'link' : ''}" ${link ? raw(`data-act="open-room" data-id="${esc(it.roomId)}"`) : pub && it.roomId ? raw(`data-act="pub-room" data-id="${esc(it.roomId)}" data-name="${esc(it.roomName)}" data-pay="${payType ? 1 : 0}"`) : ''}>
     <h3>${String(it.roomName).toUpperCase()}${tenantName ? html` <span class="muted small">· ${tenantName}</span>` : ''}</h3>
-    <dl>${rows.map(([k, v]) => html`<dt>${k}</dt><dd>${v}</dd>`)}</dl>
+    <dl>${rows.map(([k, v]) => html`<dt>${k}</dt><dd>${v}</dd>`)}</dl>${noteLines(it.notes)}
     ${(it.also || []).filter((x) => x !== duePay || it.type !== 'need_readings').length ? html`<div class="also">Đồng thời: ${(it.also || []).filter((x) => x !== duePay || it.type !== 'need_readings').join('; ')}</div>` : ''}${btns}</article>`;
 }
 

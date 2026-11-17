@@ -2,7 +2,7 @@ import { html, raw, vnd, dmy, field, openModal, closeModal, toast, $, GENDER, IN
 import { D, DV, save, api, apiUrl, room, tenant, invD, latestInvOf } from '../api.js';
 import { acts, forms, live, rerender, go } from '../ui.js';
 import { idBox, resetImages, getBlob, uploadImage } from '../images.js';
-import { personFields, collectPerson, occFields, collectOccupant, contactRow, oldDebtFields, collectOldDebt } from './room.js';
+import { personFields, collectPerson, occFields, collectOccupant, contactRow, oldDebtFields, collectOldDebt , effOldDebt } from './room.js';
 import { icon } from '../icons.js';
 import { downloadRoomProfile } from '../profile-img.js';
 
@@ -65,11 +65,11 @@ acts['id-delete'] = async (el) => { if (!confirm('Xóa ảnh CCCD này khỏi kh
 acts['edit-tenant'] = (el) => {
   const t = tenant(el.dataset.id); const r = D().rentals.filter((x) => x.tenantId === t.id).slice(-1)[0];
   const act = r && r.status === 'active';
-  openModal('Sửa thông tin khách', html`<form data-form="tenant-edit" data-id="${t.id}" data-rental="${act ? r.id : ''}"><fieldset><legend>Khách thuê</legend>${personFields(t)}</fieldset>${act ? oldDebtFields(r.oldDebtInfo) : ''}<div class="err-inline"></div><button class="btn primary block" type="submit">LƯU</button></form>`, { wide: true });
+  openModal('Sửa thông tin khách', html`<form data-form="tenant-edit" data-id="${t.id}" data-rental="${act ? r.id : ''}"><fieldset><legend>Khách thuê</legend>${personFields(t)}</fieldset>${act ? oldDebtFields(effOldDebt(r)) : ''}<div class="err-inline"></div><button class="btn primary block" type="submit">LƯU</button></form>`, { wide: true });
 };
 forms['tenant-edit'] = async (f, fd) => {
   await save('PUT', `tenants/${f.dataset.id}`, { tenant: collectPerson(fd) }, 'Đã lưu');
-  const rid = f.dataset.rental; if (rid) { const r = D().rentals.find((x) => x.id === rid); const od = collectOldDebt(fd), cur = r?.oldDebtInfo || { amount: 0, reason: '', date: '' };
+  const rid = f.dataset.rental; if (rid) { const r = D().rentals.find((x) => x.id === rid); const od = collectOldDebt(fd), cur = (r && effOldDebt(r)) || { amount: 0, reason: '', date: '' };
     if (od.amount !== (cur.amount || 0) || od.reason !== (cur.reason || '') || (od.date !== cur.date && (od.amount || cur.amount))) await save('PUT', `rentals/${rid}/old-debt`, od, 'Đã lưu tiền nợ cũ'); }
   closeModal(); rerender();
 };
